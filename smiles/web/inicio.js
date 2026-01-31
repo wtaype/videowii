@@ -8,7 +8,7 @@ const navSections = [
   {
     icon: 'fa-compress-arrows-alt',
     title: 'Optimizar',
-    desc: 'Reduce el tamaño de tus videos MP4, AVI y más sin perder calidad usando FFmpeg',
+    desc: 'Reduce el tamaño de tus videos sin perder calidad. Compresión inteligente con FFmpeg.',
     color: '--success',
     link: '/optimizar',
     emoji: '🚀'
@@ -16,7 +16,7 @@ const navSections = [
   {
     icon: 'fa-palette',
     title: 'Editar',
-    desc: 'Mejora tus videos: ajusta brillo, contraste, velocidad y filtros profesionalmente',
+    desc: 'Ajusta brillo, contraste, velocidad y aplica filtros profesionales a tus videos.',
     color: '--Mora',
     link: '/editar',
     emoji: '🎨'
@@ -24,7 +24,7 @@ const navSections = [
   {
     icon: 'fa-exchange-alt',
     title: 'Convertir',
-    desc: 'Transforma tus videos a MP4, MKV, AVI, MOV, WEBM y FLV fácilmente',
+    desc: 'Transforma entre MP4, MKV, AVI, MOV, WEBM y FLV con calidad profesional.',
     color: '--info',
     link: '/conversor',
     emoji: '🔄'
@@ -32,97 +32,145 @@ const navSections = [
   {
     icon: 'fa-globe',
     title: 'Online',
-    desc: 'Visualiza videos de YouTube, TikTok, Facebook y Twitch sin anuncios',
+    desc: 'Visualiza videos de YouTube, TikTok, Facebook y Twitch sin anuncios ni distracciones.',
     color: '--warning',
     link: '/online',
     emoji: '🌐'
   }
 ];
 
-// 📊 Estadísticas impactantes sobre procesamiento de video
+// 📊 Estadísticas impactantes
 const stats = [
-  { number: 4, label: 'Herramientas de Video', suffix: '+' },
-  { number: 100, label: 'Privacidad Total', suffix: '%' },
+  { number: 4, label: 'Herramientas Potentes', suffix: '+' },
+  { number: 100, label: 'Privacidad Garantizada', suffix: '%' },
   { number: 10, label: 'Formatos Soportados', suffix: '+' },
-  { number: 4, label: 'Calidad Soportada', suffix: 'K' }
+  { number: 4, label: 'Resolución Máxima', suffix: 'K' }
 ];
 
 // 🎯 Roles rotatorios
 const roles = [
-  '🎬 Edición Profesional',
-  '🚀 Optimización Rápida',
+  '🎬 Edición Profesional de Video',
+  '🚀 Optimización Ultra Rápida',
   '🔄 Conversión Universal',
   '🌐 Visor Multiplataforma'
+];
+
+// 💡 Características destacadas
+const features = [
+  {
+    icon: 'fa-server',
+    title: 'Procesamiento Local',
+    desc: 'Todo se procesa en tu máquina. Tus videos nunca salen de tu dispositivo. Privacidad total garantizada.',
+    gradient: 'linear-gradient(135deg, #00f3ff 0%, #0EBEFF 100%)'
+  },
+  {
+    icon: 'fa-bolt',
+    title: 'Velocidad Extrema',
+    desc: 'Aprovecha todo el poder de tu hardware con FFmpeg. Conversiones y renderizados ultrarrápidos.',
+    gradient: 'linear-gradient(135deg, #ffa726 0%, #ff9800 100%)'
+  },
+  {
+    icon: 'fa-sliders-h',
+    title: 'Control Profesional',
+    desc: 'Ajusta codecs, bitrates, resoluciones y filtros con precisión de nivel experto.',
+    gradient: 'linear-gradient(135deg, #7000FF 0%, #9442ff 100%)'
+  },
+  {
+    icon: 'fa-shield-alt',
+    title: '100% Gratuito',
+    desc: 'Sin marcas de agua, sin límites, sin suscripciones. Todas las funciones disponibles siempre.',
+    gradient: 'linear-gradient(135deg, #29C72E 0%, #3cd741 100%)'
+  }
 ];
 
 export const render = () => `
   <div class="inicio_container">
     <!-- HERO SECTION -->
     <section class="hero">
+      <div class="hero_bg_gradient"></div>
+      <div class="hero_particles">
+        ${Array.from({ length: 20 }, (_, i) => `<div class="particle" style="--i: ${i}"></div>`).join('')}
+      </div>
+      
       <div class="hero_content">
-        <div class="hero_saludo">
-          <span class="saludo_texto">${Saludar()} Creador!</span>
-          <span class="saludo_emoji">🎥</span>
+        <div class="hero_badge">
+          <i class="fas fa-sparkles"></i>
+          <span>${Saludar()} Creador!</span>
         </div>
+        
         <h1 class="hero_title">
-          Bienvenido a <span class="gradient_text">${app}</span>
+          Crea Videos Increíbles con
+          <span class="gradient_text">${app}</span>
         </h1>
+        
         <div class="hero_roles">
           ${roles.map((role, i) => `<span class="role ${i === 0 ? 'active' : ''}">${role}</span>`).join('')}
         </div>
+        
         <p class="hero_subtitle">
-          Tu suite completa para videos: optimiza, edita, convierte y visualiza.
-          Potenciado por FFmpeg para máxima calidad y rendimiento local.
+          La suite completa para creadores de TikTok. Optimiza, edita, convierte y visualiza tus videos 
+          con herramientas profesionales. Potenciado por FFmpeg para máxima calidad.
         </p>
+        
         <div class="hero_stats">
           <div class="stat_card">
+            <div class="stat_icon"><i class="fas fa-tools"></i></div>
             <div class="stat_number" data-target="4">0</div>
             <div class="stat_label">Módulos</div>
           </div>
           <div class="stat_card">
+            <div class="stat_icon"><i class="fas fa-lock"></i></div>
             <div class="stat_number" data-target="100">0</div>
             <div class="stat_label">% Privado</div>
           </div>
           <div class="stat_card">
+            <div class="stat_icon"><i class="fas fa-video"></i></div>
             <div class="stat_number" data-target="4">0</div>
             <div class="stat_label">K Calidad</div>
           </div>
         </div>
+        
         <div class="hero_actions">
           <a href="/optimizar" class="btn_primary">
-            <i class="fas fa-magic"></i>
-            <span>Optimizar Video</span>
+            <i class="fas fa-rocket"></i>
+            <span>Comenzar Ahora</span>
+            <i class="fas fa-arrow-right"></i>
           </a>
           <a href="/online" class="btn_secondary">
             <i class="fas fa-play-circle"></i>
-            <span>Ver Online</span>
+            <span>Ver Demo</span>
           </a>
         </div>
       </div>
+      
       <div class="hero_visual">
         <div class="img_container">
-          <div class="img_ring"></div>
-          <div class="img_ring ring2"></div>
-          <img src="${import.meta.env.BASE_URL}hero.png" 
-               alt="Edición de video" 
+          <div class="img_glow"></div>
+          <img src="${import.meta.env.BASE_URL}hero.webp" 
+               alt="VideoWii - Edición profesional de video" 
                class="hero_img"
-               loading="lazy">
+               loading="eager">
           <div class="img_badge">
             <i class="fas fa-check-circle"></i>
-            <span>FFmpeg Inside</span>
+            <span>FFmpeg Powered</span>
           </div>
         </div>
+        
         <div class="floating_icon icon1" title="Optimizar" data-link="/optimizar">
-          <i class="fas fa-compress-arrows-alt"></i>
+          <i class="fas fa-bolt"></i>
+          <span class="icon_label">Optimizar</span>
         </div>
         <div class="floating_icon icon2" title="Convertir" data-link="/conversor">
           <i class="fas fa-exchange-alt"></i>
+          <span class="icon_label">Convertir</span>
         </div>
         <div class="floating_icon icon3" title="Online" data-link="/online">
           <i class="fas fa-globe"></i>
+          <span class="icon_label">Online</span>
         </div>
         <div class="floating_icon icon4" title="Editar" data-link="/editar">
-          <i class="fas fa-palette"></i>
+          <i class="fas fa-cut"></i>
+          <span class="icon_label">Editar</span>
         </div>
       </div>
     </section>
@@ -130,59 +178,56 @@ export const render = () => `
     <!-- CARACTERÍSTICAS PRINCIPALES -->
     <section class="features">
       <div class="section_header">
-        <h2 class="section_title">¿Por qué ${app}?</h2>
+        <h2 class="section_title">¿Por qué elegir ${app}?</h2>
+        <p class="section_subtitle">Herramientas profesionales al alcance de todos</p>
         <div class="section_line"></div>
       </div>
       <div class="features_grid">
-        <div class="feature_card">
-          <div class="card_icon">
-            <i class="fas fa-server"></i>
+        ${features.map((feature, i) => `
+          <div class="feature_card" style="--delay: ${i * 0.1}s">
+            <div class="feature_icon" style="background: ${feature.gradient}">
+              <i class="fas ${feature.icon}"></i>
+            </div>
+            <h3>${feature.title}</h3>
+            <p>${feature.desc}</p>
           </div>
-          <h3>Servidor Local</h3>
-          <p>Procesamiento potente en tu propia máquina usando Node.js y FFmpeg. Sin subir archivos a la nube externa.</p>
-        </div>
-        <div class="feature_card">
-          <div class="card_icon">
-            <i class="fas fa-bolt"></i>
-          </div>
-          <h3>Rendimiento Nativo</h3>
-          <p>Aprovecha la potencia de tu hardware para conversiones y renderizados rápidos y eficientes.</p>
-        </div>
-        <div class="feature_card">
-          <div class="card_icon">
-            <i class="fas fa-sliders-h"></i>
-          </div>
-          <h3>Control Total</h3>
-          <p>Ajusta codecs, tasas de bits, formatos y filtros con precisión profesional.</p>
-        </div>
+        `).join('')}
       </div>
     </section>
 
     <!-- NAVEGACIÓN VISUAL -->
     <section class="nav_visual">
       <div class="section_header">
-        <h2 class="section_title">Nuestras Herramientas</h2>
+        <h2 class="section_title">Explora Nuestras Herramientas</h2>
+        <p class="section_subtitle">Todo lo que necesitas para crear contenido profesional</p>
         <div class="section_line"></div>
       </div>
       <div class="nav_grid">
-        ${navSections.map(section => `
-          <a href="${section.link}" class="nav_card" data-page="${section.link.slice(1)}">
-            <div class="nav_card_icon" style="background: linear-gradient(135deg, var(${section.color}) 0%, var(--hv) 100%); color: var(--txa);">
-              <i class="fas ${section.icon}"></i>
+        ${navSections.map((section, i) => `
+          <a href="${section.link}" class="nav_card" data-page="${section.link.slice(1)}" style="--delay: ${i * 0.1}s">
+            <div class="nav_card_header">
+              <div class="nav_card_icon" style="background: linear-gradient(135deg, var(${section.color}) 0%, var(--hv) 100%);">
+                <i class="fas ${section.icon}"></i>
+              </div>
+              <div class="nav_card_emoji">${section.emoji}</div>
             </div>
-            <div class="nav_card_emoji">${section.emoji}</div>
             <h3 class="nav_card_title">${section.title}</h3>
             <p class="nav_card_desc">${section.desc}</p>
             <div class="nav_card_arrow">
-              <i class="fas fa-arrow-right"></i> Ir a ${section.title}
+              <span>Explorar</span>
+              <i class="fas fa-arrow-right"></i>
             </div>
           </a>
         `).join('')}
       </div>
     </section>
 
-    <!-- ESTADÍSTICAS -->
+    <!-- ESTADÍSTICAS DESTACADAS -->
     <section class="stats_section">
+      <div class="stats_content">
+        <h2 class="stats_title">VideoWii en Números</h2>
+        <p class="stats_subtitle">Potencia y versatilidad para tus proyectos</p>
+      </div>
       <div class="stats_grid">
         ${stats.map(stat => `
           <div class="stat_box">
@@ -197,13 +242,14 @@ export const render = () => `
     <section class="tech_section">
       <div class="section_header">
         <h2 class="section_title">Tecnologías Potentes</h2>
+        <p class="section_subtitle">Construido con las mejores herramientas del mercado</p>
         <div class="section_line"></div>
       </div>
       <div class="tech_grid">
         <div class="tech_card" data-tech="ffmpeg">
           <div class="tech_icon">🎥</div>
           <h4>FFmpeg</h4>
-          <p>El estándar industrial para procesamiento de video</p>
+          <p>Motor de procesamiento de video más potente del mundo</p>
         </div>
         <div class="tech_card" data-tech="nodejs">
           <div class="tech_icon">🟢</div>
@@ -218,7 +264,25 @@ export const render = () => `
         <div class="tech_card" data-tech="jquery">
           <div class="tech_icon">🔧</div>
           <h4>jQuery</h4>
-          <p>Manipulación DOM eficiente y ligera</p>
+          <p>Manipulación DOM eficiente y confiable</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA FINAL -->
+    <section class="cta_section">
+      <div class="cta_content">
+        <h2 class="cta_title">¿Listo para crear videos increíbles?</h2>
+        <p class="cta_subtitle">Comienza ahora mismo, sin registro, sin límites</p>
+        <div class="cta_actions">
+          <a href="/optimizar" class="btn_primary btn_large">
+            <i class="fas fa-rocket"></i>
+            <span>Optimizar mi Video</span>
+          </a>
+          <a href="/acerca" class="btn_secondary btn_large">
+            <i class="fas fa-info-circle"></i>
+            <span>Conocer Más</span>
+          </a>
         </div>
       </div>
     </section>
@@ -243,23 +307,22 @@ export const init = () => {
       const $num = $(this);
       const objetivo = parseInt($num.data('target'));
       let actual = 0;
-      const incremento = objetivo / 50; // Velocidad de animación
+      const incremento = objetivo / 60;
       
       const timer = setInterval(() => {
         actual += incremento;
         if (actual >= objetivo) {
-          // Formatear sufijos especiales
           let texto = objetivo;
           if (objetivo === 100) texto += '%';
-          if (objetivo === 4 && $num.next().text().includes('Calidad')) texto += 'K';
-          else if (objetivo === 4) texto += '+'; // Para módulos
+          else if (objetivo === 4 && $num.next().text().includes('Calidad')) texto += 'K';
+          else if (objetivo === 4) texto += '+';
           
           $num.text(texto);
           clearInterval(timer);
         } else {
           $num.text(Math.floor(actual));
         }
-      }, 30);
+      }, 25);
     });
   });
 
@@ -279,33 +342,28 @@ export const init = () => {
         } else {
           $this.text(Math.floor(actual) + suffix);
         }
-      }, 30);
+      }, 25);
     });
   });
 
   // 🎨 ANIMACIÓN CARDS CARACTERÍSTICAS
   wiVista('.features_grid', () => {
     $('.feature_card').each((i, el) => {
-      setTimeout(() => $(el).addClass('visible'), i * 150);
+      setTimeout(() => $(el).addClass('visible'), i * 100);
     });
   });
 
   // 🎨 ANIMACIÓN CARDS NAVEGACIÓN
   wiVista('.nav_grid', () => {
     $('.nav_card').each((i, el) => {
-      setTimeout(() => {
-        $(el).css({
-          opacity: '1',
-          transform: 'translateY(0)'
-        });
-      }, i * 100);
+      setTimeout(() => $(el).addClass('visible'), i * 100);
     });
   });
 
   // 🎨 ANIMACIÓN TECH CARDS
   wiVista('.tech_grid', () => {
     $('.tech_card').each((i, el) => {
-      setTimeout(() => $(el).addClass('visible'), i * 120);
+      setTimeout(() => $(el).addClass('visible'), i * 100);
     });
   });
 
@@ -314,32 +372,32 @@ export const init = () => {
     const link = $(this).data('link');
     if (link) {
       wiTip(this, '¡Vamos! 🎬', 'success', 1000);
-      
-      // Simular navegación SPA si es necesario o usar window.location
-      // Aquí usamos window.location para consistencia, pero idealmente usaríamos el router
-      // Acceder al router globalmente si está expuesto o disparar evento
-      $('.winav_item[data-page="' + link.replace('/', '') + '"]').click();
+      setTimeout(() => {
+        $('.winav_item[data-page="' + link.replace('/', '') + '"]').click();
+      }, 300);
     }
   });
 
-  // 🖱️ TECH CARDS HOVER TOOLTIP
+  // 🖱️ TECH CARDS HOVER
   $('.tech_card').on('mouseenter', function() {
     const tech = $(this).data('tech');
     const tooltips = {
-      'ffmpeg': '¡Potencia de video pura!',
-      'nodejs': '¡Backend JavaScript ultrarrápido!',
-      'vite': '¡Velocidad de desarrollo sónica!',
-      'jquery': '¡Clásico confiable!'
+      'ffmpeg': '¡El estándar de la industria! 🎥',
+      'nodejs': '¡JavaScript en el servidor! 🟢',
+      'vite': '¡Velocidad de desarrollo extrema! ⚡',
+      'jquery': '¡Clásico y confiable! 🔧'
     };
     wiTip(this, tooltips[tech] || 'Tecnología potente', 'info', 2000);
   });
 
-  // 🎉 MENSAJE DE BIENVENIDA (solo primera vez en sesión)
-  if (!sessionStorage.getItem('videowii_welcome')) {
-    setTimeout(() => {
-      sessionStorage.setItem('videowii_welcome', 'true');
-    }, 1000);
-  }
+  // 🎉 ANIMACIÓN DE PARTÍCULAS
+  const particles = document.querySelectorAll('.particle');
+  particles.forEach((particle, i) => {
+    const delay = Math.random() * 5;
+    const duration = 10 + Math.random() * 10;
+    particle.style.animationDelay = `${delay}s`;
+    particle.style.animationDuration = `${duration}s`;
+  });
 };
 
 export const cleanup = () => {
