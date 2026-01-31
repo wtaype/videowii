@@ -1,4 +1,4 @@
-name: 🚀 Deploy loveye
+name: 🚀 Deploy videowii
 
 on:
   push:
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IS_TAG: ${{ github.ref_type == 'tag' }}
-      BASE_URL: ${{ github.ref_type == 'tag' && format('/loveye/{0}/', github.ref_name) || '/loveye/' }}
+      BASE_URL: ${{ github.ref_type == 'tag' && format('/videowii/{0}/', github.ref_name) || '/videowii/' }}
       DEST_DIR: ${{ github.ref_type == 'tag' && github.ref_name || '.' }}
       
     steps:
@@ -64,5 +64,5 @@ jobs:
 
       - run: |
           echo "✅ Deploy completado!"
-          echo "🔥 Firebase: https://loveye.web.app (solo main)"
-          echo "🐙 GitHub: https://wtaype.github.io/loveye/${{ env.DEST_DIR }}"
+          echo "🔥 Firebase: https://videowii.web.app (solo main)"
+          echo "🐙 GitHub: https://wtaype.github.io/videowii/${{ env.DEST_DIR }}"
