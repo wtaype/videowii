@@ -3,12 +3,6 @@ import { resolve } from 'path';
 
 export default defineConfig(({ mode }) => ({
   base: '/', 
-  server: {
-    headers: {
-      'Cross-Origin-Opener-Policy': 'same-origin',
-      'Cross-Origin-Embedder-Policy': 'require-corp'
-    }
-  },
   build: {
     outDir: 'dist',
     minify: 'esbuild',
@@ -18,7 +12,6 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['jquery'],
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore']
         }
       },
       plugins: [{

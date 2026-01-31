@@ -287,6 +287,7 @@
   animation: float 3s ease-in-out infinite;
   cursor: pointer;
   transition: all var(--tr_m);
+  z-index: 4;
 }
 
 .floating_icon:hover {
@@ -395,21 +396,24 @@
 
 .nav_grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 2.5vh;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2vh;
 }
 
 .nav_card {
   background: var(--wb);
   border: 2px solid transparent;
   border-radius: 16px;
-  padding: 3vh 2.5vw;
+  padding: 3vh 2vw;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   text-decoration: none;
   display: block;
   opacity: 0;
   transform: translateY(30px);
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav_card:hover {
@@ -451,6 +455,7 @@
   font-size: var(--fz_m2);
   color: var(--txe);
   line-height: 1.6;
+  flex: 1;
 }
 
 .nav_card_arrow {
@@ -527,7 +532,7 @@
   background: var(--wb);
   border: 2px solid transparent;
   border-radius: 12px;
-  padding: 2.5vh 1.5vw;
+  padding: 3vh 1.5vw;
   text-align: center;
   transition: all var(--tr_m);
   cursor: pointer;
@@ -575,9 +580,12 @@
     height: 50vh;
   }
 
-  .features_grid,
-  .nav_grid {
+  .features_grid {
     grid-template-columns: 1fr;
+  }
+  
+  .nav_grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .tech_grid {
@@ -607,6 +615,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
+  .nav_grid,
   .tech_grid {
     grid-template-columns: 1fr;
   }
