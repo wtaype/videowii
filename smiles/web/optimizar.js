@@ -3,6 +3,14 @@ import $ from 'jquery';
 import { app } from '../wii.js';
 import { Notificacion, wiSpin } from '../widev.js';
 
+// ✅ DETECCIÓN DINÁMICA DE API (como WiMP3)
+const API = (() => {
+  if (typeof window === 'undefined') return '';
+  return window.location.hostname === 'localhost' 
+    ? 'http://localhost:3000' 
+    : window.location.origin;
+})();
+
 export const render = () => `
   <div class="optimizar_container mwb">
     <!-- MAIN CONTENT: 70% LEFT + 29% RIGHT -->
@@ -253,7 +261,6 @@ export const init = () => {
 
       console.log('🎬 Iniciando optimización:', { quality, resolution, codec });
 
-      // Crear FormData para enviar al servidor
       const formData = new FormData();
       formData.append('video', currentVideo);
       formData.append('quality', quality);
@@ -262,8 +269,8 @@ export const init = () => {
 
       updateProgress(10, 'Subiendo video al servidor...');
 
-      // Enviar al servidor
-      const response = await fetch('http://localhost:3000/optimize', {
+      // ✅ USAR API DINÁMICA EN VEZ DE LOCALHOST HARDCODED
+      const response = await fetch(`${API}/optimize`, {
         method: 'POST',
         body: formData
       });
@@ -283,8 +290,8 @@ export const init = () => {
 
       updateProgress(90, 'Descargando video optimizado...');
 
-      // Descargar el video optimizado
-      const downloadUrl = `http://localhost:3000${result.downloadUrl}`;
+      // ✅ USAR API DINÁMICA PARA DOWNLOAD
+      const downloadUrl = `${API}${result.downloadUrl}`;
       const downloadResponse = await fetch(downloadUrl);
       const blob = await downloadResponse.blob();
 
@@ -351,18 +358,15 @@ export const init = () => {
 
       console.log('✅ [Upload] Metadata del video:', videoMetadata);
 
-      // Mostrar video y ocultar placeholder
       $('#noVideoPlaceholder').hide();
       $('#optimizarVideo').show();
 
-      // Actualizar UI
       $('#videoDuration').text(formatDuration(video.duration));
       $('#videoResolution').text(`${video.videoWidth}x${video.videoHeight}`);
       $('#videoSize').text(formatFileSize(file.size));
       $('#videoFormat').text(videoMetadata.format);
       $('#videoBitrate').text(calculateBitrate(file.size, video.duration));
       
-      // Mostrar panel de info y ocultar upload zone
       $('#uploadZone').hide();
       $('#videoInfoPanel').fadeIn();
       
@@ -379,15 +383,13 @@ export const init = () => {
   function resetOptimizer() {
     const video = document.getElementById('optimizarVideo');
     if (video) {
-      // Remove event handlers to prevent error loop
       video.onloadedmetadata = null;
       video.onerror = null;
       
-      // Revoke URL and clear src
       if (video.src) {
         URL.revokeObjectURL(video.src);
         video.src = '';
-        video.load(); // Reset video element
+        video.load();
       }
     }
     
