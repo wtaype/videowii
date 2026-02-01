@@ -14,13 +14,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Headers necesarios para FFmpeg.wasm (SharedArrayBuffer)
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
-  next();
-});
-
+// ✅ CORS simple como WiMP3 (sin headers problemáticos)
 app.use(cors());
 app.use(express.json());
 
@@ -71,7 +65,6 @@ app.post('/optimize', upload.single('video'), (req, res) => {
     .audioCodec('aac')
     .audioBitrate('128k');
 
-  // Apply resolution if not original
   if (resolution !== 'original') {
     command = command.size(`?x${resolution}`);
   }
@@ -110,20 +103,16 @@ app.post('/edit', upload.single('video'), (req, res) => {
 
   console.log('🎨 Editando video:', { brightness, contrast, saturation, speed, input: req.file.path });
 
-  // Build FFmpeg filter string for color adjustments
   const filters = [];
   
-  // Normalize values (FFmpeg uses 0-2 scale, we use 0-200%)
   const b = parseFloat(brightness) / 100;
   const c = parseFloat(contrast) / 100;
   const s = parseFloat(saturation) / 100;
   
-  // Apply color filters if different from defaults
   if (b !== 1 || c !== 1 || s !== 1) {
     filters.push(`eq=brightness=${(b - 1) * 0.5}:contrast=${c}:saturation=${s}`);
   }
 
-  // Apply speed adjustment
   const speedVal = parseFloat(speed);
   if (speedVal !== 1) {
     filters.push(`setpts=${1/speedVal}*PTS`);
@@ -134,12 +123,10 @@ app.post('/edit', upload.single('video'), (req, res) => {
     .audioCodec('aac')
     .audioBitrate('128k');
 
-  // Apply filters if any
   if (filters.length > 0) {
     command = command.videoFilters(filters.join(','));
   }
 
-  // Adjust audio speed if needed
   if (speedVal !== 1) {
     command = command.audioFilters(`atempo=${speedVal}`);
   }
@@ -172,7 +159,6 @@ app.post('/convert-format', upload.single('video'), (req, res) => {
 
   console.log('🔄 Convirtiendo formato:', { format, quality, input: req.file.path });
 
-  // Quality settings
   const qualitySettings = {
     high: { crf: '18', bitrate: '5000k' },
     medium: { crf: '23', bitrate: '2500k' },
@@ -181,7 +167,6 @@ app.post('/convert-format', upload.single('video'), (req, res) => {
 
   const settings = qualitySettings[quality] || qualitySettings.medium;
 
-  // Format-specific codecs
   const formatConfig = {
     mp4: { videoCodec: 'libx264', audioCodec: 'aac' },
     avi: { videoCodec: 'mpeg4', audioCodec: 'mp3' },
@@ -199,7 +184,6 @@ app.post('/convert-format', upload.single('video'), (req, res) => {
     .videoBitrate(settings.bitrate)
     .audioBitrate('128k');
 
-  // Add CRF for formats that support it
   if (['mp4', 'mov', 'mkv'].includes(format)) {
     command = command.addOption('-crf', settings.crf);
   }
