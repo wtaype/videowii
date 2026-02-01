@@ -1,9 +1,8 @@
 import './optimizar.css';
 import $ from 'jquery';
-import { app, ipdev} from '../wii.js';
-import { Notificacion, wiSpin } from '../widev.js';
+import { app, ipdev } from '../wii.js';
+import { Mensaje, Notificacion, wiSpin } from '../widev.js';
 
-// ✅ DETECCIÓN DINÁMICA DE API 
 const API = (() => {
   if (typeof window === 'undefined') return '';
   const h = window.location.hostname;
@@ -13,56 +12,20 @@ const API = (() => {
 
 export const render = () => `
   <div class="optimizar_container mwb">
-    <!-- MAIN CONTENT: 70% LEFT + 29% RIGHT -->
     <section class="optimizar_main">
-      <!-- LEFT COLUMN: Video Preview (70%) -->
       <div class="optimizar_left">
-        <!-- Video Preview -->
-        <div class="video_preview_wrapper">
-          <div class="video_preview_box" id="videoPreviewBox">
-            <div class="no_video_placeholder" id="noVideoPlaceholder">
-              <i class="fas fa-video"></i>
-              <p>Carga un video para optimizar</p>
-            </div>
-            <video id="optimizarVideo" controls playsinline autoplay loop style="display:none;"></video>
-          </div>
-        </div>
-
-        <!-- Progress Section (Hidden initially) -->
-        <div class="progress_section" id="progressSection" style="display:none;">
-          <div class="progress_header">
-            <h4><i class="fas fa-spinner fa-spin"></i> Optimizando Video...</h4>
-            <span class="progress_percent" id="progressPercent">0%</span>
-          </div>
-          <div class="progress_bar">
-            <div class="progress_fill" id="progressFill"></div>
-          </div>
-          <p class="progress_message" id="progressMessage">Iniciando optimización...</p>
-        </div>
-      </div>
-
-      <!-- RIGHT COLUMN: Upload & Info (29%) -->
-      <div class="optimizar_right">
-        <!-- Upload Zone -->
-        <div class="upload_zone" id="uploadZone">
-          <div class="upload_icon">
-            <i class="fas fa-cloud-upload-alt"></i>
-          </div>
-          <h3>Arrastra tu video aquí</h3>
-          <p>o haz doble clic para seleccionar</p>
-          <span class="upload_formats">MP4, MOV, WEBM, AVI</span>
-          <input type="file" id="videoInput" accept="video/*" hidden>
-        </div>
-
-        <!-- Video Info Panel (Hidden until video loaded) -->
-        <div class="video_info_panel" id="videoInfoPanel" style="display:none;">
-          <!-- Info Header -->
-          <div class="info_header">
+        <div class="video_info_section">
+          <div class="video_info_header">
             <h3><i class="fas fa-info-circle"></i> Información del Video</h3>
           </div>
 
-          <!-- Action Buttons -->
-          <div class="info_actions">
+          <div class="upload_zone_compact" id="uploadZone">
+            <i class="fas fa-cloud-upload-alt"></i>
+            <p>Doble clic para seleccionar video</p>
+            <input type="file" id="videoInput" accept="video/*" hidden>
+          </div>
+
+          <div class="video_actions">
             <button class="btn_select" id="btnSelect">
               <i class="fas fa-folder-open"></i>
               <span>Seleccionar</span>
@@ -73,94 +36,140 @@ export const render = () => `
             </button>
           </div>
 
-          <!-- Video Stats Grid -->
-          <div class="info_stats">
-            <div class="stat_item">
-              <div class="stat_icon"><i class="fas fa-clock"></i></div>
-              <div class="stat_content">
-                <span class="stat_label">Duración:</span>
-                <span class="stat_value" id="videoDuration">--</span>
-              </div>
-            </div>
-            <div class="stat_item">
-              <div class="stat_icon"><i class="fas fa-expand"></i></div>
-              <div class="stat_content">
-                <span class="stat_label">Resolución:</span>
-                <span class="stat_value" id="videoResolution">--</span>
-              </div>
-            </div>
-            <div class="stat_item">
-              <div class="stat_icon"><i class="fas fa-file"></i></div>
-              <div class="stat_content">
-                <span class="stat_label">Tamaño:</span>
-                <span class="stat_value" id="videoSize">--</span>
-              </div>
-            </div>
-            <div class="stat_item">
-              <div class="stat_icon"><i class="fas fa-film"></i></div>
-              <div class="stat_content">
-                <span class="stat_label">Formato:</span>
-                <span class="stat_value" id="videoFormat">--</span>
-              </div>
-            </div>
-            <div class="stat_item">
-              <div class="stat_icon"><i class="fas fa-tachometer-alt"></i></div>
-              <div class="stat_content">
-                <span class="stat_label">FPS:</span>
-                <span class="stat_value" id="videoFps">30</span>
-              </div>
-            </div>
-            <div class="stat_item">
-              <div class="stat_icon"><i class="fas fa-compress"></i></div>
-              <div class="stat_content">
-                <span class="stat_label">Bitrate:</span>
-                <span class="stat_value" id="videoBitrate">--</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Optimization Settings -->
-          <div class="optimization_section">
+          <div class="optimization_settings">
             <h4><i class="fas fa-sliders-h"></i> Configuración</h4>
             
             <div class="setting_item">
-              <label for="qualitySlider">
-                <i class="fas fa-star"></i> Calidad: <span id="qualityValue">28</span> (CRF)
-              </label>
+              <label><i class="fas fa-star"></i> Calidad: <span id="qualityValue">28</span> (CRF)</label>
               <input type="range" id="qualitySlider" min="18" max="35" value="28" step="1">
               <small>18=Máxima calidad, 35=Menor tamaño</small>
             </div>
 
-            <div class="setting_item">
-              <label for="resolutionSelect">
-                <i class="fas fa-desktop"></i> Resolución:
-              </label>
-              <select id="resolutionSelect">
-                <option value="original">Original</option>
-                <option value="1080">1080p (Full HD)</option>
-                <option value="720">720p (HD)</option>
-                <option value="480">480p (SD)</option>
-              </select>
-            </div>
+            <div class="settings_grid">
+              <div class="setting_item">
+                <label><i class="fas fa-desktop"></i> Resolución:</label>
+                <select id="resolutionSelect">
+                  <option value="original">Original</option>
+                  <option value="1080">1080p (Full HD)</option>
+                  <option value="720">720p (HD)</option>
+                  <option value="480">480p (SD)</option>
+                </select>
+              </div>
 
-            <div class="setting_item">
-              <label for="codecSelect">
-                <i class="fas fa-cog"></i> Codec:
-              </label>
-              <select id="codecSelect">
-                <option value="h264">H.264 (Mejor compatibilidad)</option>
-                <option value="h265">H.265 (Menor tamaño)</option>
-              </select>
+              <div class="setting_item">
+                <label><i class="fas fa-cog"></i> Codec:</label>
+                <select id="codecSelect">
+                  <option value="h264">H.264 (Mejor compatibilidad)</option>
+                  <option value="h265">H.265 (Menor tamaño)</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <!-- Optimize Button -->
-          <div class="optimize_actions">
-            <button class="btn_optimize" id="btnOptimize">
-              <i class="fas fa-magic"></i>
-              <span>Optimizar Video</span>
-            </button>
+          <div class="video_stats_grid" id="videoStatsGrid" style="display:none;">
+            <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-clock"></i></div>
+              <div class="stat_card_content">
+                <div class="stat_card_label">Duración:</div>
+                <div class="stat_card_value" id="videoDuration">--</div>
+              </div>
+            </div>
+            <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-expand"></i></div>
+              <div class="stat_card_content">
+                <div class="stat_card_label">Resolución:</div>
+                <div class="stat_card_value" id="videoResolution">--</div>
+              </div>
+            </div>
+            <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-file"></i></div>
+              <div class="stat_card_content">
+                <div class="stat_card_label">Tamaño:</div>
+                <div class="stat_card_value" id="videoSize">--</div>
+              </div>
+            </div>
+            <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-film"></i></div>
+              <div class="stat_card_content">
+                <div class="stat_card_label">Formato:</div>
+                <div class="stat_card_value" id="videoFormat">--</div>
+              </div>
+            </div>
+            <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-tachometer-alt"></i></div>
+              <div class="stat_card_content">
+                <div class="stat_card_label">Bitrate:</div>
+                <div class="stat_card_value" id="videoBitrate">--</div>
+              </div>
+            </div>
+            <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-chart-line"></i></div>
+              <div class="stat_card_content">
+                <div class="stat_card_label">Calidad:</div>
+                <div class="stat_card_value" id="videoQuality">--</div>
+              </div>
+            </div>
           </div>
+
+          <div class="optimization_preview" id="optimizationPreview" style="display:none;">
+            <div class="preview_header">
+              <h4><i class="fas fa-eye"></i> Vista Previa</h4>
+            </div>
+            <div class="preview_comparison_grid">
+              <div class="preview_cell">
+                <span class="preview_label">Original:</span>
+                <span class="preview_value" id="previewOriginal">--</span>
+              </div>
+              <div class="preview_cell arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+              <div class="preview_cell">
+                <span class="preview_label">Estimado:</span>
+                <span class="preview_value success" id="previewEstimated">--</span>
+              </div>
+              <div class="preview_cell reduction">
+                <i class="fas fa-chart-pie"></i>
+                <span id="previewReduction">0%</span>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn_optimize" id="btnOptimize">
+            <i class="fas fa-magic"></i>
+            <span>Optimizar Video</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="optimizar_right">
+        <div class="progress_section" id="progressSection" style="display:none;">
+          <div class="progress_header">
+            <h4><i class="fas fa-spinner fa-spin"></i> Optimizando Video...</h4>
+            <span class="progress_percent" id="progressPercent">0%</span>
+          </div>
+          <div class="progress_bar">
+            <div class="progress_fill" id="progressFill"></div>
+          </div>
+          <p class="progress_message" id="progressMessage">Iniciando optimización...</p>
+        </div>
+
+        <div class="video_player_wrapper">
+          <div class="no_video_placeholder" id="noVideoPlaceholder">
+            <i class="fas fa-video"></i>
+            <h3>Carga un video para optimizar</h3>
+            <p>Soporta MP4, MOV, WEBM, AVI y más formatos</p>
+          </div>
+          <div class="video_player_container" id="videoPlayerContainer" style="display:none;">
+            <video id="optimizarVideo" controls playsinline autoplay loop></video>
+          </div>
+        </div>
+
+        <div class="video_controls" id="videoControls" style="display:none;">
+          <button class="control_btn" id="btnRewind"><i class="fas fa-backward"></i></button>
+          <button class="control_btn play" id="btnPlayPause"><i class="fas fa-play"></i></button>
+          <button class="control_btn" id="btnForward"><i class="fas fa-forward"></i></button>
+          <button class="control_btn" id="btnVolume"><i class="fas fa-volume-up"></i></button>
+          <button class="control_btn" id="btnFullscreen"><i class="fas fa-expand"></i></button>
         </div>
       </div>
     </section>
@@ -169,184 +178,105 @@ export const render = () => `
 
 export const init = () => {
   console.log(`✅ Optimizar de ${app} cargado`);
+  let currentVideo = null, videoMetadata = {}, isOptimizing = false, videoAnalysis = null;
 
-  let currentVideo = null;
-  let videoMetadata = {};
-  let isOptimizing = false;
+  const analyzeVideo = async (file, videoElement) => {
+    const duration = videoElement.duration;
+    const size = file.size;
+    const bitrate = (size * 8) / duration;
+    const bitrateKbps = bitrate / 1000;
+    const bitrateMbps = bitrateKbps / 1000;
 
-  // Upload zone - Double click to select
-  $('#uploadZone').on('dblclick', () => {
-    $('#videoInput').click();
-  });
+    let quality = 'baja';
+    let suggestedCRF = 30;
+    let isAlreadyOptimized = false;
 
-  // Drag and drop
-  $('#uploadZone').on('dragover', (e) => {
-    e.preventDefault();
-    $(e.currentTarget).addClass('dragover');
-  });
-
-  $('#uploadZone').on('dragleave', (e) => {
-    $(e.currentTarget).removeClass('dragover');
-  });
-
-  $('#uploadZone').on('drop', (e) => {
-    e.preventDefault();
-    $(e.currentTarget).removeClass('dragover');
-    const files = e.originalEvent.dataTransfer.files;
-    if (files.length > 0) {
-      handleVideoUpload(files[0]);
+    if (bitrateMbps > 8) {
+      quality = 'muy alta';
+      suggestedCRF = 23;
+    } else if (bitrateMbps > 5) {
+      quality = 'alta';
+      suggestedCRF = 25;
+    } else if (bitrateMbps > 2.5) {
+      quality = 'media';
+      suggestedCRF = 28;
+    } else if (bitrateMbps > 1) {
+      quality = 'baja';
+      suggestedCRF = 30;
+      isAlreadyOptimized = true;
+    } else {
+      quality = 'muy baja';
+      suggestedCRF = 32;
+      isAlreadyOptimized = true;
     }
-  });
 
-  // File input change
-  $('#videoInput').on('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      handleVideoUpload(file);
+    return {
+      duration,
+      size,
+      bitrate: bitrateKbps,
+      bitrateMbps,
+      quality,
+      suggestedCRF,
+      isAlreadyOptimized,
+      width: videoElement.videoWidth,
+      height: videoElement.videoHeight
+    };
+  };
+
+  const estimateOutputSize = (analysis, quality, codec) => {
+    const targetBitrate = getTargetBitrate(quality, codec, analysis.width, analysis.height);
+    const estimatedSize = (targetBitrate * analysis.duration) / 8;
+    return estimatedSize;
+  };
+
+  const getTargetBitrate = (crf, codec, width, height) => {
+    const pixels = width * height;
+    const isHD = pixels >= 1280 * 720;
+    const isFHD = pixels >= 1920 * 1080;
+
+    let baseBitrate;
+    if (isFHD) baseBitrate = 4000;
+    else if (isHD) baseBitrate = 2500;
+    else baseBitrate = 1500;
+
+    const crfFactor = Math.max(0.3, 1 - ((parseInt(crf) - 18) / 17) * 0.7);
+    const codecFactor = codec === 'h265' ? 0.6 : 1;
+
+    return baseBitrate * crfFactor * codecFactor;
+  };
+
+  const updateOptimizationPreview = () => {
+    if (!videoAnalysis) return;
+
+    const quality = $('#qualitySlider').val();
+    const codec = $('#codecSelect').val();
+    const estimatedSize = estimateOutputSize(videoAnalysis, quality, codec);
+    const reduction = ((1 - estimatedSize / videoAnalysis.size) * 100).toFixed(1);
+
+    $('#previewOriginal').text(formatFileSize(videoAnalysis.size));
+    $('#previewEstimated').text(formatFileSize(estimatedSize));
+    $('#previewReduction').text(`${reduction}%`);
+
+    if (estimatedSize >= videoAnalysis.size * 0.95) {
+      $('#previewEstimated').removeClass('success').addClass('warning');
+    } else {
+      $('#previewEstimated').removeClass('warning').addClass('success');
     }
-  });
 
-  // Select button
-  $(document).on('click', '#btnSelect', () => {
-    if (!isOptimizing) $('#videoInput').click();
-  });
+    $('#optimizationPreview').fadeIn();
+  };
 
-  // Delete button
-  $(document).on('click', '#btnDelete', () => {
-    if (isOptimizing) {
-      Notificacion('No puedes eliminar mientras se optimiza', 'warning', 2000);
-      return;
-    }
-    if (confirm('¿Estás seguro de eliminar este video?')) {
-      resetOptimizer();
-      Notificacion('Video eliminado', 'success', 2000);
-    }
-  });
-
-  // Quality slider
-  $(document).on('input', '#qualitySlider', function() {
-    $('#qualityValue').text($(this).val());
-  });
-
-  // Optimize button
-  $(document).on('click', '#btnOptimize', async () => {
-    console.log('🎯 [Optimize] Botón optimizar clickeado');
+  const handleVideoUpload = async (file) => {
+    if (!file.type.startsWith('video/')) return Mensaje('Por favor selecciona un archivo de video válido', 'error');
     
-    if (!currentVideo) {
-      console.warn('⚠️ [Optimize] No hay video cargado');
-      Notificacion('No hay video para optimizar', 'error', 2000);
-      return;
-    }
-
-    if (isOptimizing) {
-      console.warn('⚠️ [Optimize] Ya hay optimización en progreso');
-      Notificacion('Ya hay una optimización en progreso', 'warning', 2000);
-      return;
-    }
-
-    console.log('✅ [Optimize] Iniciando optimización...');
-    await optimizeVideo();
-  });
-
-  async function optimizeVideo() {
-    isOptimizing = true;
-    wiSpin('#btnOptimize', true, 'Optimizando...');
-    $('#progressSection').fadeIn();
-    updateProgress(0, 'Preparando video...');
-
-    try {
-      const quality = $('#qualitySlider').val();
-      const resolution = $('#resolutionSelect').val();
-      const codec = $('#codecSelect').val();
-
-      console.log('🎬 Iniciando optimización:', { quality, resolution, codec });
-
-      const formData = new FormData();
-      formData.append('video', currentVideo);
-      formData.append('quality', quality);
-      formData.append('resolution', resolution);
-      formData.append('codec', codec);
-
-      updateProgress(10, 'Subiendo video al servidor...');
-
-      // ✅ USAR API DINÁMICA EN VEZ DE LOCALHOST HARDCODED
-      const response = await fetch(`${API}/optimize`, {
-        method: 'POST',
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`Error del servidor: ${response.statusText}`);
-      }
-
-      updateProgress(50, 'Optimizando video en el servidor...');
-
-      const result = await response.json();
-      console.log('✅ Respuesta del servidor:', result);
-
-      if (!result.success) {
-        throw new Error(result.error || 'Error desconocido');
-      }
-
-      updateProgress(90, 'Descargando video optimizado...');
-
-      // ✅ USAR API DINÁMICA PARA DOWNLOAD
-      const downloadUrl = `${API}${result.downloadUrl}`;
-      const downloadResponse = await fetch(downloadUrl);
-      const blob = await downloadResponse.blob();
-
-      // Calculate compression
-      const originalSize = currentVideo.size;
-      const optimizedSize = blob.size;
-      const reduction = ((1 - optimizedSize / originalSize) * 100).toFixed(1);
-
-      updateProgress(100, 'Completado!');
-      console.log(`✅ Optimización completa: ${reduction}% reducción`);
-
-      // Download file
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      a.href = url;
-      a.download = `optimizado_${currentVideo.name}`;
-      a.click();
-      URL.revokeObjectURL(url);
-
-      setTimeout(() => {
-        $('#progressSection').fadeOut();
-        Notificacion(`✅ Video optimizado! Reducción: ${reduction}% (${formatFileSize(originalSize)} → ${formatFileSize(optimizedSize)})`, 'success', 5000);
-      }, 1000);
-
-    } catch (error) {
-      console.error('❌ Error optimizando:', error);
-      Notificacion(`Error al optimizar: ${error.message}`, 'error', 4000);
-      $('#progressSection').fadeOut();
-    } finally {
-      isOptimizing = false;
-      wiSpin('#btnOptimize', false);
-    }
-  }
-
-  function updateProgress(percent, message) {
-    $('#progressPercent').text(`${percent}%`);
-    $('#progressFill').css('width', `${percent}%`);
-    $('#progressMessage').text(message);
-  }
-
-  function handleVideoUpload(file) {
-    console.log('📁 [Upload] Archivo seleccionado:', file.name, file.type, formatFileSize(file.size));
-    
-    if (!file.type.startsWith('video/')) {
-      console.warn('⚠️ [Upload] Tipo de archivo inválido:', file.type);
-      Notificacion('Por favor selecciona un archivo de video válido', 'error', 3000);
-      return;
-    }
-
     currentVideo = file;
     const url = URL.createObjectURL(file);
-    const video = document.getElementById('optimizarVideo');
+    const video = $('#optimizarVideo')[0];
     
+    video.onloadedmetadata = video.onerror = null;
     video.src = url;
-    video.onloadedmetadata = () => {
+
+    video.onloadedmetadata = async () => {
       videoMetadata = {
         duration: video.duration,
         width: video.videoWidth,
@@ -356,75 +286,181 @@ export const init = () => {
         name: file.name
       };
 
-      console.log('✅ [Upload] Metadata del video:', videoMetadata);
+      videoAnalysis = await analyzeVideo(file, video);
 
       $('#noVideoPlaceholder').hide();
-      $('#optimizarVideo').show();
-
+      $('#videoPlayerContainer, #videoStatsGrid, #videoControls').show();
       $('#videoDuration').text(formatDuration(video.duration));
       $('#videoResolution').text(`${video.videoWidth}x${video.videoHeight}`);
       $('#videoSize').text(formatFileSize(file.size));
       $('#videoFormat').text(videoMetadata.format);
-      $('#videoBitrate').text(calculateBitrate(file.size, video.duration));
+      $('#videoBitrate').text(`${videoAnalysis.bitrateMbps.toFixed(2)} Mbps`);
+      $('#videoQuality').text(videoAnalysis.quality.toUpperCase());
+
+      $('#qualitySlider').val(videoAnalysis.suggestedCRF);
+      $('#qualityValue').text(videoAnalysis.suggestedCRF);
+
+      updateOptimizationPreview();
       
-      $('#uploadZone').hide();
-      $('#videoInfoPanel').fadeIn();
-      
-      Notificacion('¡Video cargado exitosamente! 🎬', 'success', 2000);
+      Mensaje('¡Video analizado exitosamente! 🎬', 'success');
     };
 
-    video.onerror = (e) => {
-      console.error('❌ [Upload] Error cargando video:', e);
-      Notificacion('Error al cargar el video. Intenta con otro archivo.', 'error', 3000);
-      resetOptimizer();
-    };
-  }
-
-  function resetOptimizer() {
-    const video = document.getElementById('optimizarVideo');
-    if (video) {
-      video.onloadedmetadata = null;
-      video.onerror = null;
-      
-      if (video.src) {
-        URL.revokeObjectURL(video.src);
-        video.src = '';
-        video.load();
+    video.onerror = () => {
+      if (currentVideo) {
+        Mensaje('Error al cargar el video. Intenta con otro archivo.', 'error');
+        resetOptimizer();
       }
+    };
+  };
+
+  const resetOptimizer = () => {
+    const video = $('#optimizarVideo')[0];
+    if (video) {
+      video.onloadedmetadata = video.onerror = null;
+      video.pause();
+      if (video.src) URL.revokeObjectURL(video.src);
+      video.src = '';
+      video.load();
     }
-    
-    $('#optimizarVideo').hide();
+    $('#videoPlayerContainer, #videoStatsGrid, #videoControls, #optimizationPreview').hide();
     $('#noVideoPlaceholder').show();
-    $('#videoInfoPanel').hide();
-    $('#uploadZone').show();
     $('#videoInput').val('');
     $('#progressSection').hide();
-    
     currentVideo = null;
     videoMetadata = {};
-  }
+    videoAnalysis = null;
+  };
 
-  function formatDuration(seconds) {
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  }
+  const optimizeVideo = async () => {
+    const quality = $('#qualitySlider').val();
+    const estimatedSize = estimateOutputSize(videoAnalysis, quality, $('#codecSelect').val());
 
-  function formatFileSize(bytes) {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-  }
+    if (estimatedSize >= videoAnalysis.size * 0.98) {
+      const confirm = window.confirm(
+        '⚠️ ADVERTENCIA: El tamaño estimado es similar o mayor al original.\n\n' +
+        'Esto puede suceder si el video ya está optimizado.\n\n' +
+        '¿Deseas continuar de todos modos?'
+      );
+      if (!confirm) return;
+    }
 
-  function calculateBitrate(size, duration) {
-    const bitrate = (size * 8) / duration / 1000;
-    return bitrate > 1000 ? (bitrate / 1000).toFixed(2) + ' Mbps' : bitrate.toFixed(0) + ' kbps';
-  }
+    isOptimizing = true;
+    wiSpin('#btnOptimize', true, 'Optimizando...');
+    $('#progressSection').fadeIn();
+    updateProgress(0, 'Preparando video...');
+
+    try {
+      const resolution = $('#resolutionSelect').val();
+      const codec = $('#codecSelect').val();
+
+      const formData = new FormData();
+      formData.append('video', currentVideo);
+      formData.append('quality', quality);
+      formData.append('resolution', resolution);
+      formData.append('codec', codec);
+
+      updateProgress(10, 'Subiendo video al servidor...');
+
+      const response = await fetch(`${API}/optimize`, { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`Error del servidor: ${response.statusText}`);
+
+      updateProgress(50, 'Optimizando video en el servidor...');
+
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || 'Error desconocido');
+
+      updateProgress(90, 'Descargando video optimizado...');
+
+      const downloadUrl = `${API}${result.downloadUrl}`;
+      const downloadResponse = await fetch(downloadUrl);
+      const blob = await downloadResponse.blob();
+
+      const originalSize = currentVideo.size;
+      const optimizedSize = blob.size;
+      const reduction = ((1 - optimizedSize / originalSize) * 100).toFixed(1);
+
+      updateProgress(100, 'Completado!');
+
+      if (optimizedSize >= originalSize) {
+        Notificacion(`Video  (${formatFileSize(optimizedSize)}) es mayor que el original (${formatFileSize(originalSize)}). No se recomienda usar editar videos.`, 'warning');
+      }
+
+      const a = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      a.href = url;
+      a.download = `optimizado_${currentVideo.name}`;
+      a.click();
+      URL.revokeObjectURL(url);
+
+      setTimeout(() => {
+        $('#progressSection').fadeOut();
+        if (reduction > 0) {
+          Notificacion(`✅ Video optimizado: ${reduction}% (${formatFileSize(originalSize)} → ${formatFileSize(optimizedSize)})`, 'success');
+        }
+      }, 1000);
+
+    } catch (error) {
+      console.error('❌ Error optimizando:', error);
+      Mensaje(`Error al optimizar: ${error.message}`, 'error');
+      $('#progressSection').fadeOut();
+    } finally {
+      isOptimizing = false;
+      wiSpin('#btnOptimize', false);
+    }
+  };
+
+  const updateProgress = (percent, message) => {
+    $('#progressPercent').text(`${percent}%`);
+    $('#progressFill').css('width', `${percent}%`);
+    $('#progressMessage').text(message);
+  };
+
+  const formatDuration = (s) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+  const formatFileSize = (b) => b < 1024 ? b + ' B' : b < 1024 * 1024 ? (b / 1024).toFixed(2) + ' KB' : (b / (1024 * 1024)).toFixed(2) + ' MB';
+
+  $('#uploadZone').on('dblclick', () => $('#videoInput').click())
+    .on('dragover', (e) => { e.preventDefault(); $(e.currentTarget).addClass('dragover'); })
+    .on('dragleave', (e) => $(e.currentTarget).removeClass('dragover'))
+    .on('drop', (e) => { e.preventDefault(); $(e.currentTarget).removeClass('dragover'); const files = e.originalEvent.dataTransfer.files; if (files.length) handleVideoUpload(files[0]); });
+
+  $('#videoInput').on('change', (e) => { const file = e.target.files[0]; if (file) handleVideoUpload(file); });
+  $(document).on('click', '#btnSelect', () => !isOptimizing && $('#videoInput').click());
+  $(document).on('click', '#btnDelete', () => {
+    if (isOptimizing) return Mensaje('No puedes eliminar mientras se optimiza', 'warning');
+    if (confirm('¿Estás seguro de eliminar este video?')) { resetOptimizer(); Mensaje('Video eliminado', 'success'); }
+  });
+  $(document).on('input', '#qualitySlider, #resolutionSelect, #codecSelect', function() {
+    $('#qualityValue').text($('#qualitySlider').val());
+    if (videoAnalysis) updateOptimizationPreview();
+  });
+  $(document).on('click', '#btnOptimize', async () => {
+    if (!currentVideo) return Mensaje('No hay video para optimizar', 'error');
+    if (isOptimizing) return Mensaje('Ya hay una optimización en progreso', 'warning');
+    await optimizeVideo();
+  });
+
+  $(document).on('click', '#btnPlayPause', function() {
+    const video = $('#optimizarVideo')[0];
+    if (video.paused) { video.play(); $(this).html('<i class="fas fa-pause"></i>'); }
+    else { video.pause(); $(this).html('<i class="fas fa-play"></i>'); }
+  });
+  $(document).on('click', '#btnRewind', () => { const v = $('#optimizarVideo')[0]; v.currentTime = Math.max(0, v.currentTime - 10); });
+  $(document).on('click', '#btnForward', () => { const v = $('#optimizarVideo')[0]; v.currentTime = Math.min(v.duration, v.currentTime + 10); });
+  $(document).on('click', '#btnVolume', function() {
+    const video = $('#optimizarVideo')[0];
+    video.muted = !video.muted;
+    $(this).html(`<i class="fas fa-volume-${video.muted ? 'mute' : 'up'}"></i>`);
+  });
+  $(document).on('click', '#btnFullscreen', () => {
+    const video = $('#optimizarVideo')[0];
+    if (video.requestFullscreen) video.requestFullscreen();
+    else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen();
+  });
 };
 
 export const cleanup = () => {
   console.log('🧹 Optimizar limpiado');
-  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnOptimize, #qualitySlider').off();
-  const video = document.getElementById('optimizarVideo');
-  if (video && video.src) URL.revokeObjectURL(video.src);
+  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnOptimize, #qualitySlider, #resolutionSelect, #codecSelect, #btnPlayPause, #btnRewind, #btnForward, #btnVolume, #btnFullscreen').off();
+  const video = $('#optimizarVideo')[0];
+  if (video?.src) URL.revokeObjectURL(video.src);
 };
