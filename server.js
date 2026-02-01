@@ -14,7 +14,6 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ CORS simple como WiMP3 (sin headers problemáticos)
 app.use(cors());
 app.use(express.json());
 
@@ -24,188 +23,83 @@ const outputDir = path.join(__dirname, 'outputs');
 
 const upload = multer({ dest: uploadsDir, limits: { fileSize: 500*1024*1024 } });
 
-app.get('/health', (req, res) => res.json({ status: 'OK' }));
-
-app.post('/convert', upload.single('video'), (req, res) => {
+// ✅ HELPER: Procesar video y limpiar
+const processVideo = (req, res, ffmpegCommand) => {
   if (!req.file) return res.status(400).json({ error: 'No file' });
-
-  const out = path.join(outputDir, `${Date.now()}.mp3`);
-
-  ffmpeg(req.file.path)
-    .noVideo()
-    .audioBitrate('192k')
+  
+  ffmpegCommand
     .on('end', () => {
       fs.unlinkSync(req.file.path);
-      const s = fs.statSync(out);
+      const s = fs.statSync(ffmpegCommand._outputs[0].target);
       res.json({ 
         success: true, 
-        filename: path.basename(out), 
+        filename: path.basename(ffmpegCommand._outputs[0].target), 
         size: s.size, 
-        downloadUrl: `/download/${path.basename(out)}` 
+        downloadUrl: `/download/${path.basename(ffmpegCommand._outputs[0].target)}` 
       });
     })
     .on('error', (e) => {
       fs.existsSync(req.file.path) && fs.unlinkSync(req.file.path);
       res.status(500).json({ error: e.message });
-    })
-    .save(out);
+    });
+};
+
+app.get('/health', (req, res) => res.json({ status: 'OK' }));
+
+app.post('/convert', upload.single('video'), (req, res) => {
+  const out = path.join(outputDir, `${Date.now()}.mp3`);
+  processVideo(req, res, ffmpeg(req.file.path).noVideo().audioBitrate('192k').save(out));
 });
 
 app.post('/optimize', upload.single('video'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file' });
-
   const { quality = '28', resolution = 'original', codec = 'h264' } = req.body;
-  const out = path.join(outputDir, `optimized_${Date.now()}.mp4`);
-
-  console.log('🎬 Optimizando video:', { quality, resolution, codec, input: req.file.path });
-
-  let command = ffmpeg(req.file.path)
+  const out = path.join(outputDir, `opt_${Date.now()}.mp4`);
+  
+  let cmd = ffmpeg(req.file.path)
     .videoCodec(codec === 'h265' ? 'libx265' : 'libx264')
     .addOption('-crf', quality)
     .audioCodec('aac')
     .audioBitrate('128k');
-
-  if (resolution !== 'original') {
-    command = command.size(`?x${resolution}`);
-  }
-
-  command
-    .on('end', () => {
-      fs.unlinkSync(req.file.path);
-      const s = fs.statSync(out);
-      console.log('✅ Optimización completada:', { size: s.size, output: out });
-      res.json({ 
-        success: true, 
-        filename: path.basename(out), 
-        size: s.size, 
-        downloadUrl: `/download/${path.basename(out)}` 
-      });
-    })
-    .on('error', (e) => {
-      console.error('❌ Error optimizando:', e.message);
-      fs.existsSync(req.file.path) && fs.unlinkSync(req.file.path);
-      res.status(500).json({ error: e.message });
-    })
-    .save(out);
+  
+  if (resolution !== 'original') cmd = cmd.size(`?x${resolution}`);
+  processVideo(req, res, cmd.save(out));
 });
 
 app.post('/edit', upload.single('video'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file' });
-
-  const { 
-    brightness = '100', 
-    contrast = '100', 
-    saturation = '100',
-    speed = '1' 
-  } = req.body;
-  
-  const out = path.join(outputDir, `edited_${Date.now()}.mp4`);
-
-  console.log('🎨 Editando video:', { brightness, contrast, saturation, speed, input: req.file.path });
-
-  const filters = [];
+  const { brightness = '100', contrast = '100', saturation = '100', speed = '1' } = req.body;
+  const out = path.join(outputDir, `edit_${Date.now()}.mp4`);
   
   const b = parseFloat(brightness) / 100;
   const c = parseFloat(contrast) / 100;
   const s = parseFloat(saturation) / 100;
-  
-  if (b !== 1 || c !== 1 || s !== 1) {
-    filters.push(`eq=brightness=${(b - 1) * 0.5}:contrast=${c}:saturation=${s}`);
-  }
-
   const speedVal = parseFloat(speed);
-  if (speedVal !== 1) {
-    filters.push(`setpts=${1/speedVal}*PTS`);
-  }
-
-  let command = ffmpeg(req.file.path)
-    .videoCodec('libx264')
-    .audioCodec('aac')
-    .audioBitrate('128k');
-
-  if (filters.length > 0) {
-    command = command.videoFilters(filters.join(','));
-  }
-
-  if (speedVal !== 1) {
-    command = command.audioFilters(`atempo=${speedVal}`);
-  }
-
-  command
-    .on('end', () => {
-      fs.unlinkSync(req.file.path);
-      const s = fs.statSync(out);
-      console.log('✅ Edición completada:', { size: s.size, output: out });
-      res.json({ 
-        success: true, 
-        filename: path.basename(out), 
-        size: s.size, 
-        downloadUrl: `/download/${path.basename(out)}` 
-      });
-    })
-    .on('error', (e) => {
-      console.error('❌ Error editando:', e.message);
-      fs.existsSync(req.file.path) && fs.unlinkSync(req.file.path);
-      res.status(500).json({ error: e.message });
-    })
-    .save(out);
+  
+  const filters = [];
+  if (b !== 1 || c !== 1 || s !== 1) filters.push(`eq=brightness=${(b-1)*0.5}:contrast=${c}:saturation=${s}`);
+  if (speedVal !== 1) filters.push(`setpts=${1/speedVal}*PTS`);
+  
+  let cmd = ffmpeg(req.file.path).videoCodec('libx264').audioCodec('aac').audioBitrate('128k');
+  if (filters.length) cmd = cmd.videoFilters(filters.join(','));
+  if (speedVal !== 1) cmd = cmd.audioFilters(`atempo=${speedVal}`);
+  
+  processVideo(req, res, cmd.save(out));
 });
 
 app.post('/convert-format', upload.single('video'), (req, res) => {
-  if (!req.file) return res.status(400).json({ error: 'No file' });
-
   const { format = 'mp4', quality = 'medium' } = req.body;
-  const out = path.join(outputDir, `converted_${Date.now()}.${format}`);
-
-  console.log('🔄 Convirtiendo formato:', { format, quality, input: req.file.path });
-
-  const qualitySettings = {
-    high: { crf: '18', bitrate: '5000k' },
-    medium: { crf: '23', bitrate: '2500k' },
-    low: { crf: '28', bitrate: '1000k' }
+  const out = path.join(outputDir, `conv_${Date.now()}.${format}`);
+  
+  const qs = { high: '18', medium: '23', low: '28' };
+  const fc = {
+    mp4: { v: 'libx264', a: 'aac' }, avi: { v: 'mpeg4', a: 'mp3' },
+    mov: { v: 'libx264', a: 'aac' }, webm: { v: 'libvpx', a: 'libvorbis' }
   };
-
-  const settings = qualitySettings[quality] || qualitySettings.medium;
-
-  const formatConfig = {
-    mp4: { videoCodec: 'libx264', audioCodec: 'aac' },
-    avi: { videoCodec: 'mpeg4', audioCodec: 'mp3' },
-    mov: { videoCodec: 'libx264', audioCodec: 'aac' },
-    webm: { videoCodec: 'libvpx', audioCodec: 'libvorbis' },
-    mkv: { videoCodec: 'libx264', audioCodec: 'aac' },
-    flv: { videoCodec: 'flv', audioCodec: 'mp3' }
-  };
-
-  const config = formatConfig[format] || formatConfig.mp4;
-
-  let command = ffmpeg(req.file.path)
-    .videoCodec(config.videoCodec)
-    .audioCodec(config.audioCodec)
-    .videoBitrate(settings.bitrate)
-    .audioBitrate('128k');
-
-  if (['mp4', 'mov', 'mkv'].includes(format)) {
-    command = command.addOption('-crf', settings.crf);
-  }
-
-  command
-    .on('end', () => {
-      fs.unlinkSync(req.file.path);
-      const s = fs.statSync(out);
-      console.log('✅ Conversión completada:', { size: s.size, output: out });
-      res.json({ 
-        success: true, 
-        filename: path.basename(out), 
-        size: s.size, 
-        downloadUrl: `/download/${path.basename(out)}` 
-      });
-    })
-    .on('error', (e) => {
-      console.error('❌ Error convirtiendo:', e.message);
-      fs.existsSync(req.file.path) && fs.unlinkSync(req.file.path);
-      res.status(500).json({ error: e.message });
-    })
-    .save(out);
+  
+  const cfg = fc[format] || fc.mp4;
+  let cmd = ffmpeg(req.file.path).videoCodec(cfg.v).audioCodec(cfg.a).audioBitrate('128k');
+  if (['mp4','mov','mkv'].includes(format)) cmd = cmd.addOption('-crf', qs[quality]);
+  
+  processVideo(req, res, cmd.save(out));
 });
 
 app.get('/download/:filename', (req, res) => {
@@ -214,12 +108,9 @@ app.get('/download/:filename', (req, res) => {
   res.download(f);
 });
 
-// ✅ Solo servir HTML en producción
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'dist')));
-  app.use((req, res) => {
-    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
-  });
+  app.use((req, res) => res.sendFile(path.join(__dirname, 'dist', 'index.html')));
 }
 
 app.listen(PORT, () => console.log(`Server: http://localhost:${PORT}`));
