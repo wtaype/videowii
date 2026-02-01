@@ -24,8 +24,8 @@ app.use((req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
-const uploadsDir = path.join(__dirname, 'entradas');
-const outputDir = path.join(__dirname, 'salidas');
+const uploadsDir = path.join(__dirname, 'uploads');
+const outputDir = path.join(__dirname, 'outputs');
 [uploadsDir, outputDir].forEach(d => !fs.existsSync(d) && fs.mkdirSync(d));
 
 const upload = multer({ dest: uploadsDir, limits: { fileSize: 500*1024*1024 } });
