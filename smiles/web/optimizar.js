@@ -1,14 +1,14 @@
 import './optimizar.css';
 import $ from 'jquery';
-import { app } from '../wii.js';
+import { app, ipdev} from '../wii.js';
 import { Notificacion, wiSpin } from '../widev.js';
 
-// ✅ DETECCIÓN DINÁMICA DE API (como WiMP3)
+// ✅ DETECCIÓN DINÁMICA DE API 
 const API = (() => {
   if (typeof window === 'undefined') return '';
-  return window.location.hostname === 'localhost' 
-    ? 'http://localhost:3000' 
-    : window.location.origin;
+  const h = window.location.hostname;
+  const locales = new Set(['localhost', ipdev]);
+  return locales.has(h) ? `http://${h}:3000` : window.location.origin;
 })();
 
 export const render = () => `

@@ -2,6 +2,7 @@
 // INFORMACIÓN DEL APP 
 export let id = 'videowii'
 export let app = 'VideoWii'
+export let ipdev = '192.168.18.62';
 export let lanzamiento = 2026;
 export let autor = '@wilder.taype';
 export let link = 'https://wtaype.github.io/';
