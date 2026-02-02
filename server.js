@@ -157,7 +157,7 @@ app.post('/convert-format', upload.single('video'), (req, res) => {
   processVideo(req, res, command.save(outputPath));
 });
 
-// ==================== SECCIÓN: EXTRAER ====================
+// ==================== SECCIÓN: EXTRAER (COMPACTO Y OPTIMIZADO) ====================
 app.post('/extract', upload.single('video'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
   const { type, quality, format, timestamp } = req.body;
@@ -165,78 +165,82 @@ app.post('/extract', upload.single('video'), async (req, res) => {
     switch (type) {
       case 'audio': {
         const outputPath = path.join(outputDir, `audio_${Date.now()}.mp3`);
-        console.log('🎵 Extrayendo audio');
-        ffmpeg(req.file.path)
-          .noVideo()
-          .audioBitrate(quality || '192k')
-          .audioCodec('libmp3lame')
-          .on('end', () => {
-            cleanupFile(req.file.path);
-            res.json({
-              success: true,
-              filename: path.basename(outputPath),
-              downloadUrl: `/download/${path.basename(outputPath)}`
-            });
-          })
-          .on('error', (error) => {
-            console.error('❌ Error al extraer audio:', error);
-            cleanupFile(req.file.path);
-            res.status(500).json({ error: error.message });
-          })
-          .save(outputPath);
+        console.log('🎵 Extrayendo audio:', { quality: quality || '192k' });
+        
+        await new Promise((resolve, reject) => {
+          ffmpeg(req.file.path)
+            .noVideo()
+            .audioBitrate(quality || '192k')
+            .audioCodec('libmp3lame')
+            .on('end', () => {
+              cleanupFile(req.file.path);
+              const stats = fs.statSync(outputPath);
+              res.json({
+                success: true,
+                filename: path.basename(outputPath),
+                size: stats.size,
+                downloadUrl: `/download/${path.basename(outputPath)}`
+              });
+              resolve();
+            })
+            .on('error', reject)
+            .save(outputPath);
+        });
         break;
       }
+
       case 'frame-manual': {
         const ext = format || 'jpg';
         const outputPath = path.join(outputDir, `frame_${Date.now()}.${ext}`);
-        const qualityOptions = {
-          png: ['-q:v', '1'],
-          webp: ['-q:v', '90'],
-          jpg: ['-q:v', '2']
-        };
+        const qualityOpts = { png: ['-q:v', '1'], webp: ['-q:v', '90'], jpg: ['-q:v', '2'] };
+        
         console.log('📸 Extrayendo frame manual:', { timestamp, format: ext });
-        ffmpeg(req.file.path)
-          .seekInput(timestamp || 0)
-          .frames(1)
-          .outputOptions(qualityOptions[ext] || qualityOptions.jpg)
-          .on('end', () => {
-            cleanupFile(req.file.path);
-            res.json({
-              success: true,
-              filename: path.basename(outputPath),
-              downloadUrl: `/download/${path.basename(outputPath)}`
-            });
-          })
-          .on('error', (error) => {
-            console.error('❌ Error al extraer frame:', error);
-            cleanupFile(req.file.path);
-            res.status(500).json({ error: error.message });
-          })
-          .save(outputPath);
+        
+        await new Promise((resolve, reject) => {
+          ffmpeg(req.file.path)
+            .seekInput(timestamp || 0)
+            .frames(1)
+            .outputOptions(qualityOpts[ext] || qualityOpts.jpg)
+            .on('end', () => {
+              cleanupFile(req.file.path);
+              const stats = fs.statSync(outputPath);
+              res.json({
+                success: true,
+                filename: path.basename(outputPath),
+                size: stats.size,
+                downloadUrl: `/download/${path.basename(outputPath)}`
+              });
+              resolve();
+            })
+            .on('error', reject)
+            .save(outputPath);
+        });
         break;
       }
+
       case 'frame-auto': {
         const metadata = await getVideoMetadata(req.file.path);
         const videoDuration = metadata.format.duration;
         const timestamps = [0.25, 0.50, 0.75].map(t => videoDuration * t);
         const ext = format || 'jpg';
-        const qualityOptions = {
-          png: ['-q:v', '1'],
-          webp: ['-q:v', '90'],
-          jpg: ['-q:v', '2']
-        };
-        console.log('📸 Extrayendo frames automáticos:', { count: 3, format: ext });
+        const qualityOpts = { png: ['-q:v', '1'], webp: ['-q:v', '90'], jpg: ['-q:v', '2'] };
+        
+        console.log('🖼️ Extrayendo frames automáticos:', { count: 3, format: ext });
+        
         const files = [];
         for (let i = 0; i < timestamps.length; i++) {
           const outputPath = path.join(outputDir, `frame_${Date.now()}_${i + 1}.${ext}`);
+          
           await new Promise((resolve, reject) => {
             ffmpeg(req.file.path)
               .seekInput(timestamps[i])
               .frames(1)
-              .outputOptions(qualityOptions[ext] || qualityOptions.jpg)
+              .outputOptions(qualityOpts[ext] || qualityOpts.jpg)
               .on('end', () => {
+                const stats = fs.statSync(outputPath);
                 files.push({
                   filename: path.basename(outputPath),
+                  size: stats.size,
                   downloadUrl: `/download/${path.basename(outputPath)}`
                 });
                 resolve();
@@ -245,10 +249,12 @@ app.post('/extract', upload.single('video'), async (req, res) => {
               .save(outputPath);
           });
         }
+        
         cleanupFile(req.file.path);
         res.json({ success: true, files });
         break;
       }
+
       default:
         cleanupFile(req.file.path);
         res.status(400).json({ error: 'Invalid extraction type' });

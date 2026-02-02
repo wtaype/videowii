@@ -1,7 +1,14 @@
 import './extraer.css';
 import $ from 'jquery';
-import { app } from '../wii.js';
+import { app, ipdev } from '../wii.js';
 import { Notificacion, Mensaje } from '../widev.js';
+
+const API = (() => {
+  if (typeof window === 'undefined') return '';
+  const h = window.location.hostname;
+  const locales = new Set(['localhost', ipdev]);
+  return locales.has(h) ? `http://${h}:3000` : window.location.origin;
+})();
 
 export const render = () => `
   <div class="extraer_container mwb">
@@ -30,36 +37,34 @@ export const render = () => `
             </button>
           </div>
 
-          <div class="file_info_left" id="fileInfoLeft" style="display:none;">
-            <div class="file_info_header">
-              <i class="fas fa-file-video"></i>
-              <span>Nombre:</span>
-            </div>
-            <div class="file_name_display" id="fileNameDisplay" title="">video.mp4</div>
-          </div>
-
           <div class="video_stats_grid" id="videoStatsGrid" style="display:none;">
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-clock"></i></div>
               <div class="stat_card_label">Duración:</div>
               <div class="stat_card_value" id="videoDuration">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-desktop"></i></div>
               <div class="stat_card_label">Resolución:</div>
               <div class="stat_card_value" id="videoResolution">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-hdd"></i></div>
               <div class="stat_card_label">Tamaño:</div>
               <div class="stat_card_value" id="videoSize">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-file-video"></i></div>
               <div class="stat_card_label">Formato:</div>
               <div class="stat_card_value" id="videoFormat">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-tachometer-alt"></i></div>
               <div class="stat_card_label">Bitrate:</div>
               <div class="stat_card_value" id="videoBitrate">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-star"></i></div>
               <div class="stat_card_label">FPS:</div>
               <div class="stat_card_value" id="videoFps">--</div>
             </div>
@@ -67,17 +72,33 @@ export const render = () => `
 
           <div class="extraction_preview" id="extractionPreview" style="display:none;">
             <div class="preview_header">
-              <h4><i class="fas fa-eye"></i> Vista Previa</h4>
+              <h4><i class="fas fa-eye"></i> <span id="previewTitle">Vista Previa</span></h4>
             </div>
-            <div class="preview_info">
-              <div class="preview_icon">
-                <i class="fas fa-music"></i>
+            <div class="preview_comparison">
+              <div class="preview_cell">
+                <span class="preview_label">Original:</span>
+                <span class="preview_value" id="previewOriginal">--</span>
               </div>
-              <div class="preview_details">
-                <span class="preview_type" id="previewType">Audio MP3</span>
-                <span class="preview_size" id="previewSize">~2.5 MB</span>
+              <div class="preview_arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+              <div class="preview_cell">
+                <span class="preview_label" id="previewLabel">Estimado:</span>
+                <span class="preview_value success" id="previewEstimated">--</span>
+              </div>
+              <div class="preview_reduction">
+                <i class="fas fa-chart-pie"></i>
+                <span id="previewReduction">0%</span>
               </div>
             </div>
+          </div>
+
+          <div class="file_info_left" id="fileInfoLeft" style="display:none;">
+            <div class="file_info_header">
+              <i class="fas fa-file-video"></i>
+              <span>Nombre:</span>
+            </div>
+            <div class="file_name_display" id="fileNameDisplay" title="">video.mp4</div>
           </div>
         </div>
       </div>
@@ -151,7 +172,7 @@ export const render = () => `
 export const init = () => {
   console.log(`✅ Extraer de ${app} cargado`);
 
-  let currentVideo = null, videoMetadata = {}, videoAnalysis = null, extractionType = 'audio';
+  let currentVideo = null, videoMetadata = {}, videoAnalysis = null, extractionType = 'audio', isExtracting = false;
 
   const analyzeVideo = (file, videoElement) => {
     const duration = videoElement.duration;
@@ -172,44 +193,48 @@ export const init = () => {
     if (!videoAnalysis) return;
 
     const type = $('#extractionTypeSelect').val();
-    let preview = { icon: 'fa-music', text: 'Audio MP3', size: '~2.5 MB' };
+    let estimatedSize = 0;
+    let icon = 'fa-music';
 
     switch(type) {
       case 'audio':
         const quality = $('#qualitySelect').val();
         const audioBitrate = parseInt(quality);
-        const audioSize = (videoAnalysis.duration * audioBitrate * 1000) / 8;
-        preview = {
-          icon: 'fa-music',
-          text: `Audio MP3 (${quality} kbps)`,
-          size: `~${formatFileSize(audioSize)}`
-        };
+        estimatedSize = (videoAnalysis.duration * audioBitrate * 1000) / 8;
+        icon = 'fa-music';
         break;
       
       case 'frame-auto':
         const frameFormat = $('#formatSelect').val();
         const avgFrameSize = estimateFrameSize(frameFormat, 90);
-        preview = {
-          icon: 'fa-images',
-          text: `3 Frames ${frameFormat.toUpperCase()}`,
-          size: `~${formatFileSize(avgFrameSize * 3)}`
-        };
+        estimatedSize = avgFrameSize * 3;
+        icon = 'fa-images';
         break;
       
       case 'frame-manual':
         const fmt = $('#formatSelect').val();
-        const size = estimateFrameSize(fmt, 90);
-        preview = {
-          icon: 'fa-camera',
-          text: `1 Frame ${fmt.toUpperCase()}`,
-          size: `~${formatFileSize(size)}`
-        };
+        estimatedSize = estimateFrameSize(fmt, 90);
+        icon = 'fa-camera';
         break;
     }
 
-    $('.preview_icon i').attr('class', `fas ${preview.icon}`);
-    $('#previewType').text(preview.text);
-    $('#previewSize').text(preview.size);
+    const reduction = ((1 - estimatedSize / videoAnalysis.size) * 100).toFixed(1);
+
+    $('#previewOriginal').text(formatFileSize(videoAnalysis.size));
+    $('#previewEstimated').text(formatFileSize(estimatedSize));
+    $('#previewReduction').text(`${reduction > 0 ? '-' : '+'}${Math.abs(reduction)}%`);
+    $('#previewLabel').text('Estimado:');
+    $('#previewTitle').text('Vista Previa');
+
+    // Update visual styling
+    if (estimatedSize >= videoAnalysis.size * 0.95) {
+      $('#previewEstimated').removeClass('success').addClass('warning');
+      $('#previewReduction').closest('.preview_reduction').css('background', 'var(--warning)');
+    } else {
+      $('#previewEstimated').removeClass('warning').addClass('success');
+      $('#previewReduction').closest('.preview_reduction').css('background', 'var(--success)');
+    }
+
     $('#extractionPreview').fadeIn();
   };
 
@@ -295,6 +320,7 @@ export const init = () => {
     videoMetadata = {};
     videoAnalysis = null;
     extractionType = 'audio';
+    isExtracting = false;
   };
 
   const extractContent = async () => {
@@ -303,7 +329,13 @@ export const init = () => {
       return;
     }
 
+    if (isExtracting) {
+      Notificacion('Ya hay una extracción en progreso', 'warning', 2000);
+      return;
+    }
+
     try {
+      isExtracting = true;
       $('#btnExtract').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Extrayendo...');
       $('#progressWrapper').fadeIn();
       updateProgress(0);
@@ -329,7 +361,7 @@ export const init = () => {
 
       updateProgress(10);
 
-      const response = await fetch('http://localhost:3000/extract', {
+      const response = await fetch(`${API}/extract`, {
         method: 'POST',
         body: formData
       });
@@ -344,17 +376,29 @@ export const init = () => {
       updateProgress(80);
 
       if (result.files && Array.isArray(result.files)) {
+        // Multiple files (frame-auto)
         for (const file of result.files) {
-          await downloadFile(`http://localhost:3000${file.downloadUrl}`, file.filename);
+          await downloadFile(`${API}${file.downloadUrl}`, file.filename);
         }
+        const totalSize = result.files.reduce((sum, f) => sum + (f.size || 0), 0);
+        
         updateProgress(100);
+
+        // Update preview with REAL data
+        $('#previewTitle').text('Resultado');
+        $('#previewLabel').text('Extraído:');
+        $('#previewEstimated').text(formatFileSize(totalSize));
+        const reduction = ((1 - totalSize / videoAnalysis.size) * 100).toFixed(1);
+        $('#previewReduction').text(`${reduction > 0 ? '-' : '+'}${Math.abs(reduction)}%`);
+
         setTimeout(() => {
           $('#progressWrapper').fadeOut();
           $('#btnExtract').prop('disabled', false).html('<i class="fas fa-download"></i> Extraer Frames');
-          Notificacion(`✅ ${result.files.length} frames extraídos correctamente`, 'success', 4000);
+          Notificacion(`✅ ${result.files.length} frames extraídos: ${formatFileSize(totalSize)}`, 'success', 4000);
         }, 1000);
       } else {
-        const downloadUrl = `http://localhost:3000${result.downloadUrl}`;
+        // Single file (audio or frame-manual)
+        const downloadUrl = `${API}${result.downloadUrl}`;
         const downloadResponse = await fetch(downloadUrl);
         const blob = await downloadResponse.blob();
 
@@ -367,12 +411,29 @@ export const init = () => {
         a.click();
         URL.revokeObjectURL(url);
 
+        const extractedSize = blob.size;
+        const reduction = ((1 - extractedSize / videoAnalysis.size) * 100).toFixed(1);
+
         updateProgress(100);
+
+        // Update preview with REAL data
+        $('#previewTitle').text('Resultado');
+        $('#previewLabel').text('Extraído:');
+        $('#previewEstimated').text(formatFileSize(extractedSize));
+        $('#previewReduction').text(`${reduction > 0 ? '-' : '+'}${Math.abs(reduction)}%`);
+
+        if (extractedSize >= videoAnalysis.size) {
+          $('#previewEstimated').removeClass('success').addClass('warning');
+          $('#previewReduction').closest('.preview_reduction').css('background', 'var(--warning)');
+        } else {
+          $('#previewEstimated').removeClass('warning').addClass('success');
+          $('#previewReduction').closest('.preview_reduction').css('background', 'var(--success)');
+        }
 
         setTimeout(() => {
           $('#progressWrapper').fadeOut();
           $('#btnExtract').prop('disabled', false).html(`<i class="fas fa-download"></i> Extraer ${getExtractLabel(type)}`);
-          Notificacion(`✅ ${getExtractLabel(type)} extraído: ${formatFileSize(blob.size)}`, 'success', 4000);
+          Notificacion(`✅ ${getExtractLabel(type)} extraído: ${formatFileSize(extractedSize)}`, 'success', 4000);
         }, 1000);
       }
 
@@ -381,6 +442,8 @@ export const init = () => {
       $('#progressWrapper').fadeOut();
       $('#btnExtract').prop('disabled', false).html(`<i class="fas fa-download"></i> Extraer ${getExtractLabel(extractionType)}`);
       Notificacion(`Error al extraer: ${error.message}`, 'error', 4000);
+    } finally {
+      isExtracting = false;
     }
   };
 
@@ -410,7 +473,7 @@ export const init = () => {
   };
 
   const formatFileSize = (b) => {
-    if (b < 1024) return b + ' B';
+    if (b < 1024) return b.toFixed(2) + ' B';
     if (b < 1024 * 1024) return (b / 1024).toFixed(2) + ' KB';
     return (b / (1024 * 1024)).toFixed(2) + ' MB';
   };
@@ -422,12 +485,6 @@ export const init = () => {
     if (type === 'audio') {
       $('#qualityGroup').show();
       $('#formatGroup').hide();
-      $('#qualitySelect').html(`
-        <option value="320">Alta (320 kbps)</option>
-        <option value="192" selected>Media (192 kbps)</option>
-        <option value="128">Baja (128 kbps)</option>
-        <option value="96">Muy Baja (96 kbps)</option>
-      `);
     } else {
       $('#qualityGroup').hide();
       $('#formatGroup').show();
@@ -459,9 +516,10 @@ export const init = () => {
     if (file) handleVideoUpload(file);
   });
 
-  $(document).on('click', '#btnSelect', () => $('#videoInput').click());
+  $(document).on('click', '#btnSelect', () => !isExtracting && $('#videoInput').click());
   
   $(document).on('click', '#btnDelete', () => {
+    if (isExtracting) return Notificacion('No puedes eliminar mientras se extrae', 'warning', 2000);
     if (confirm('¿Estás seguro de eliminar este video?')) {
       resetExtractor();
       Notificacion('Video eliminado', 'success', 2000);
@@ -505,7 +563,7 @@ export const init = () => {
 
 export const cleanup = () => {
   console.log('🧹 Extraer limpiado');
-  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnExtract, #extractionTypeSelect').off();
+  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnExtract, #extractionTypeSelect, #videoTimeline').off();
   const video = $('#extraerVideo')[0];
   if (video?.src) URL.revokeObjectURL(video.src);
 };
