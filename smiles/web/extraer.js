@@ -69,7 +69,7 @@ export const render = () => `
             <div class="preview_header">
               <h4><i class="fas fa-eye"></i> Vista Previa</h4>
             </div>
-            <div class="preview_info" id="previewInfo">
+            <div class="preview_info">
               <div class="preview_icon">
                 <i class="fas fa-music"></i>
               </div>
@@ -94,6 +94,7 @@ export const render = () => `
             <video id="extraerVideo" controls playsinline autoplay loop></video>
             <div class="video_timeline" id="videoTimeline" style="display:none;">
               <div class="timeline_marker" id="timelineMarker"></div>
+              <div class="timeline_tooltip" id="timelineTooltip">0:00</div>
             </div>
           </div>
         </div>
@@ -104,116 +105,28 @@ export const render = () => `
               <label><i class="fas fa-magic"></i> Extraer:</label>
               <select id="extractionTypeSelect">
                 <option value="audio">🎵 Audio (MP3)</option>
+                <option value="frame-manual">📸 Frame Actual</option>
                 <option value="frame-auto">🖼️ 3 Frames Automáticos</option>
-                <option value="frame-manual">📸 Frame en Momento Exacto</option>
-                <option value="gif">🎞️ GIF Animado</option>
               </select>
             </div>
-          </div>
 
-          <!-- OPCIONES ESPECÍFICAS POR TIPO -->
-          <div id="audioOptions" class="extraction_options">
-            <div class="controls_row">
-              <div class="control_group">
-                <label><i class="fas fa-star"></i> Calidad:</label>
-                <select id="audioQuality">
-                  <option value="320">Alta (320 kbps)</option>
-                  <option value="192" selected>Media (192 kbps)</option>
-                  <option value="128">Baja (128 kbps)</option>
-                </select>
-              </div>
+            <div class="control_group" id="qualityGroup">
+              <label><i class="fas fa-star"></i> Calidad:</label>
+              <select id="qualitySelect">
+                <option value="320">Alta (320 kbps)</option>
+                <option value="192" selected>Media (192 kbps)</option>
+                <option value="128">Baja (128 kbps)</option>
+                <option value="96">Muy Baja (96 kbps)</option>
+              </select>
             </div>
-          </div>
 
-          <div id="frameAutoOptions" class="extraction_options" style="display:none;">
-            <div class="info_banner">
-              <i class="fas fa-info-circle"></i>
-              <span>Se extraerán 3 frames de mejor calidad distribuidos uniformemente</span>
-            </div>
-            <div class="controls_row">
-              <div class="control_group">
-                <label><i class="fas fa-image"></i> Formato:</label>
-                <select id="frameFormat">
-                  <option value="jpg" selected>JPG</option>
-                  <option value="png">PNG (Mayor calidad)</option>
-                  <option value="webp">WEBP (Menor tamaño)</option>
-                </select>
-              </div>
-              <div class="control_group">
-                <label><i class="fas fa-star"></i> Calidad:</label>
-                <select id="frameQuality">
-                  <option value="100">Máxima (100%)</option>
-                  <option value="90" selected>Alta (90%)</option>
-                  <option value="80">Media (80%)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div id="frameManualOptions" class="extraction_options" style="display:none;">
-            <div class="info_banner">
-              <i class="fas fa-hand-pointer"></i>
-              <span>Haz clic en la línea de tiempo o pausa el video en el momento deseado</span>
-            </div>
-            <div class="time_selector">
-              <label><i class="fas fa-clock"></i> Momento exacto:</label>
-              <div class="time_input_group">
-                <input type="number" id="timeMinutes" min="0" max="59" value="0" placeholder="MM">
-                <span>:</span>
-                <input type="number" id="timeSeconds" min="0" max="59" value="0" placeholder="SS">
-                <button class="btn_capture_now" id="btnCaptureNow">
-                  <i class="fas fa-camera"></i> Capturar Ahora
-                </button>
-              </div>
-            </div>
-            <div class="controls_row">
-              <div class="control_group">
-                <label><i class="fas fa-image"></i> Formato:</label>
-                <select id="frameFormatManual">
-                  <option value="jpg" selected>JPG</option>
-                  <option value="png">PNG</option>
-                  <option value="webp">WEBP</option>
-                </select>
-              </div>
-              <div class="control_group">
-                <label><i class="fas fa-star"></i> Calidad:</label>
-                <select id="frameQualityManual">
-                  <option value="100">Máxima</option>
-                  <option value="90" selected>Alta</option>
-                  <option value="80">Media</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div id="gifOptions" class="extraction_options" style="display:none;">
-            <div class="controls_row">
-              <div class="control_group">
-                <label><i class="fas fa-play"></i> Inicio (segundos):</label>
-                <input type="number" id="gifStart" min="0" value="0" step="0.1">
-              </div>
-              <div class="control_group">
-                <label><i class="fas fa-hourglass-half"></i> Duración (seg):</label>
-                <input type="number" id="gifDuration" min="1" max="10" value="3" step="0.5">
-              </div>
-            </div>
-            <div class="controls_row">
-              <div class="control_group">
-                <label><i class="fas fa-desktop"></i> Tamaño:</label>
-                <select id="gifSize">
-                  <option value="480">480p</option>
-                  <option value="360" selected>360p</option>
-                  <option value="240">240p</option>
-                </select>
-              </div>
-              <div class="control_group">
-                <label><i class="fas fa-tachometer-alt"></i> FPS:</label>
-                <select id="gifFps">
-                  <option value="15" selected>15 fps</option>
-                  <option value="10">10 fps</option>
-                  <option value="24">24 fps</option>
-                </select>
-              </div>
+            <div class="control_group" id="formatGroup" style="display:none;">
+              <label><i class="fas fa-image"></i> Formato:</label>
+              <select id="formatSelect">
+                <option value="jpg" selected>JPG</option>
+                <option value="png">PNG</option>
+                <option value="webp">WEBP</option>
+              </select>
             </div>
           </div>
 
@@ -251,7 +164,7 @@ export const init = () => {
     return {
       duration, size, bitrate: bitrateKbps, bitrateMbps, format,
       width: videoElement.videoWidth, height: videoElement.videoHeight,
-      fps: 30 // Aproximado, FFmpeg puede detectar el real
+      fps: 30
     };
   };
 
@@ -263,7 +176,7 @@ export const init = () => {
 
     switch(type) {
       case 'audio':
-        const quality = $('#audioQuality').val();
+        const quality = $('#qualitySelect').val();
         const audioBitrate = parseInt(quality);
         const audioSize = (videoAnalysis.duration * audioBitrate * 1000) / 8;
         preview = {
@@ -274,36 +187,22 @@ export const init = () => {
         break;
       
       case 'frame-auto':
-        const frameFormat = $('#frameFormat').val();
-        const frameQuality = $('#frameQuality').val();
-        const avgFrameSize = estimateFrameSize(frameFormat, frameQuality);
+        const frameFormat = $('#formatSelect').val();
+        const avgFrameSize = estimateFrameSize(frameFormat, 90);
         preview = {
           icon: 'fa-images',
-          text: `3 Frames ${frameFormat.toUpperCase()} (${frameQuality}%)`,
+          text: `3 Frames ${frameFormat.toUpperCase()}`,
           size: `~${formatFileSize(avgFrameSize * 3)}`
         };
         break;
       
       case 'frame-manual':
-        const fmtManual = $('#frameFormatManual').val();
-        const qualManual = $('#frameQualityManual').val();
-        const sizeManual = estimateFrameSize(fmtManual, qualManual);
+        const fmt = $('#formatSelect').val();
+        const size = estimateFrameSize(fmt, 90);
         preview = {
           icon: 'fa-camera',
-          text: `1 Frame ${fmtManual.toUpperCase()} (${qualManual}%)`,
-          size: `~${formatFileSize(sizeManual)}`
-        };
-        break;
-      
-      case 'gif':
-        const gifDuration = parseFloat($('#gifDuration').val());
-        const gifFps = parseInt($('#gifFps').val());
-        const gifSize = parseInt($('#gifSize').val());
-        const gifEstimate = estimateGifSize(gifDuration, gifFps, gifSize);
-        preview = {
-          icon: 'fa-film',
-          text: `GIF ${gifSize}p (${gifFps} fps)`,
-          size: `~${formatFileSize(gifEstimate)}`
+          text: `1 Frame ${fmt.toUpperCase()}`,
+          size: `~${formatFileSize(size)}`
         };
         break;
     }
@@ -316,16 +215,10 @@ export const init = () => {
 
   const estimateFrameSize = (format, quality) => {
     const pixels = videoAnalysis.width * videoAnalysis.height;
-    const baseSize = pixels / 10; // Base compression
+    const baseSize = pixels / 10;
     const formatFactor = { jpg: 0.8, png: 2.5, webp: 0.6 }[format] || 1;
     const qualityFactor = parseInt(quality) / 100;
     return baseSize * formatFactor * qualityFactor;
-  };
-
-  const estimateGifSize = (duration, fps, size) => {
-    const frames = duration * fps;
-    const pixels = size * size * (16/9); // Assuming 16:9 aspect
-    return frames * (pixels / 8) * 0.3; // GIF compression factor
   };
 
   const formatDuration = (seconds) => {
@@ -369,10 +262,6 @@ export const init = () => {
       $('#videoFormat').text(videoMetadata.format);
       $('#videoBitrate').text(`${videoAnalysis.bitrateMbps.toFixed(2)} Mbps`);
       $('#videoFps').text(`${videoAnalysis.fps} fps`);
-
-      // Set max values for GIF inputs
-      $('#gifStart').attr('max', Math.floor(video.duration));
-      $('#gifDuration').attr('max', Math.min(10, Math.floor(video.duration)));
 
       estimateExtraction();
 
@@ -424,28 +313,17 @@ export const init = () => {
       formData.append('video', currentVideo);
       formData.append('type', type);
 
-      // Add specific parameters based on extraction type
       switch(type) {
         case 'audio':
-          formData.append('quality', $('#audioQuality').val());
-          break;
-        case 'frame-auto':
-          formData.append('format', $('#frameFormat').val());
-          formData.append('quality', $('#frameQuality').val());
+          formData.append('quality', $('#qualitySelect').val());
           break;
         case 'frame-manual':
-          const minutes = parseInt($('#timeMinutes').val()) || 0;
-          const seconds = parseInt($('#timeSeconds').val()) || 0;
-          const timestamp = (minutes * 60) + seconds;
-          formData.append('timestamp', timestamp);
-          formData.append('format', $('#frameFormatManual').val());
-          formData.append('quality', $('#frameQualityManual').val());
+          const video = $('#extraerVideo')[0];
+          formData.append('timestamp', video.currentTime);
+          formData.append('format', $('#formatSelect').val());
           break;
-        case 'gif':
-          formData.append('start', $('#gifStart').val());
-          formData.append('duration', $('#gifDuration').val());
-          formData.append('size', $('#gifSize').val());
-          formData.append('fps', $('#gifFps').val());
+        case 'frame-auto':
+          formData.append('format', $('#formatSelect').val());
           break;
       }
 
@@ -465,9 +343,7 @@ export const init = () => {
 
       updateProgress(80);
 
-      // Handle multiple files (frames) or single file
       if (result.files && Array.isArray(result.files)) {
-        // Multiple frames
         for (const file of result.files) {
           await downloadFile(`http://localhost:3000${file.downloadUrl}`, file.filename);
         }
@@ -478,7 +354,6 @@ export const init = () => {
           Notificacion(`✅ ${result.files.length} frames extraídos correctamente`, 'success', 4000);
         }, 1000);
       } else {
-        // Single file
         const downloadUrl = `http://localhost:3000${result.downloadUrl}`;
         const downloadResponse = await fetch(downloadUrl);
         const blob = await downloadResponse.blob();
@@ -524,8 +399,7 @@ export const init = () => {
     const labels = {
       audio: 'Audio',
       'frame-auto': 'Frames',
-      'frame-manual': 'Frame',
-      gif: 'GIF'
+      'frame-manual': 'Frame'
     };
     return labels[type] || 'Contenido';
   };
@@ -545,25 +419,28 @@ export const init = () => {
     const type = $('#extractionTypeSelect').val();
     extractionType = type;
 
-    $('.extraction_options').hide();
-    $(`#${type.replace('-', '')}Options`).show();
+    if (type === 'audio') {
+      $('#qualityGroup').show();
+      $('#formatGroup').hide();
+      $('#qualitySelect').html(`
+        <option value="320">Alta (320 kbps)</option>
+        <option value="192" selected>Media (192 kbps)</option>
+        <option value="128">Baja (128 kbps)</option>
+        <option value="96">Muy Baja (96 kbps)</option>
+      `);
+    } else {
+      $('#qualityGroup').hide();
+      $('#formatGroup').show();
+    }
 
     const labels = {
       audio: 'Audio',
       'frame-auto': 'Frames',
-      'frame-manual': 'Frame',
-      gif: 'GIF'
+      'frame-manual': 'Frame'
     };
 
     $('#btnExtract span').text(`Extraer ${labels[type]}`);
-    estimateExtraction();
-  };
-
-  const captureCurrentFrame = () => {
-    const video = $('#extraerVideo')[0];
-    $('#timeMinutes').val(Math.floor(video.currentTime / 60));
-    $('#timeSeconds').val(Math.floor(video.currentTime % 60));
-    Notificacion(`📸 Momento capturado: ${formatDuration(video.currentTime)}`, 'success', 2000);
+    if (videoAnalysis) estimateExtraction();
   };
 
   // Event Listeners
@@ -593,32 +470,42 @@ export const init = () => {
 
   $(document).on('change', '#extractionTypeSelect', updateExtractionOptions);
 
-  $(document).on('change', '#audioQuality, #frameFormat, #frameQuality, #frameFormatManual, #frameQualityManual, #gifDuration, #gifSize, #gifFps', () => {
+  $(document).on('change', '#qualitySelect, #formatSelect', () => {
     if (videoAnalysis) estimateExtraction();
   });
 
-  $(document).on('click', '#btnCaptureNow', captureCurrentFrame);
-
   $(document).on('click', '#btnExtract', extractContent);
 
-  // Video timeline interaction
+  // Video timeline interaction with tooltip
   $('#extraerVideo').on('timeupdate', function() {
     const percent = (this.currentTime / this.duration) * 100;
     $('#timelineMarker').css('left', `${percent}%`);
   });
 
-  $('#videoTimeline').on('click', function(e) {
+  $('#videoTimeline').on('mousemove', function(e) {
+    const video = $('#extraerVideo')[0];
+    const rect = this.getBoundingClientRect();
+    const percent = (e.clientX - rect.left) / rect.width;
+    const time = percent * video.duration;
+    const tooltip = $('#timelineTooltip');
+    
+    tooltip.text(formatDuration(time))
+      .css('left', `${e.clientX - rect.left}px`)
+      .show();
+  }).on('mouseleave', function() {
+    $('#timelineTooltip').hide();
+  }).on('click', function(e) {
     const video = $('#extraerVideo')[0];
     const rect = this.getBoundingClientRect();
     const percent = (e.clientX - rect.left) / rect.width;
     video.currentTime = percent * video.duration;
-    captureCurrentFrame();
+    Notificacion(`📸 Posicionado en: ${formatDuration(video.currentTime)}`, 'success', 2000);
   });
 };
 
 export const cleanup = () => {
   console.log('🧹 Extraer limpiado');
-  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnExtract, #extractionTypeSelect, #btnCaptureNow').off();
+  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnExtract, #extractionTypeSelect').off();
   const video = $('#extraerVideo')[0];
   if (video?.src) URL.revokeObjectURL(video.src);
 };
