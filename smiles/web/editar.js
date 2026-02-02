@@ -1,7 +1,7 @@
 import './editar.css';
 import $ from 'jquery';
 import { app, ipdev } from '../wii.js';
-import { Mensaje, wiSpin } from '../widev.js';
+import { Mensaje, Notificacion, wiTip } from '../widev.js';
 
 const API = (() => {
   if (typeof window === 'undefined') return '';
@@ -13,6 +13,7 @@ const API = (() => {
 export const render = () => `
   <div class="editar_container mwb">
     <section class="editar_main">
+      <!-- LEFT COLUMN (29%) -->
       <div class="editar_left">
         <div class="video_info_section">
           <div class="video_info_header">
@@ -39,24 +40,38 @@ export const render = () => `
           <div class="optimization_settings">
             <h4><i class="fas fa-palette"></i> Ajustes de Color</h4>
             
-            <div class="setting_item">
-              <label><i class="fas fa-sun"></i> Brillo: <span id="brightnessValue">100</span>%</label>
-              <input type="range" id="brightness" min="0" max="200" value="100">
-            </div>
+            <div class="settings_grid">
+              <div class="setting_input_group">
+                <label><i class="fas fa-sun"></i> Brillo:</label>
+                <div class="input_wrapper">
+                  <input type="number" id="brightnessInput" min="0" max="200" value="100">
+                  <span class="input_unit">%</span>
+                </div>
+              </div>
 
-            <div class="setting_item">
-              <label><i class="fas fa-adjust"></i> Contraste: <span id="contrastValue">100</span>%</label>
-              <input type="range" id="contrast" min="0" max="200" value="100">
-            </div>
+              <div class="setting_input_group">
+                <label><i class="fas fa-adjust"></i> Contraste:</label>
+                <div class="input_wrapper">
+                  <input type="number" id="contrastInput" min="0" max="200" value="100">
+                  <span class="input_unit">%</span>
+                </div>
+              </div>
 
-            <div class="setting_item">
-              <label><i class="fas fa-tint"></i> Saturación: <span id="saturationValue">100</span>%</label>
-              <input type="range" id="saturation" min="0" max="200" value="100">
-            </div>
+              <div class="setting_input_group">
+                <label><i class="fas fa-tint"></i> Saturación:</label>
+                <div class="input_wrapper">
+                  <input type="number" id="saturationInput" min="0" max="200" value="100">
+                  <span class="input_unit">%</span>
+                </div>
+              </div>
 
-            <div class="setting_item">
-              <label><i class="fas fa-moon"></i> Sombra: <span id="shadowValue">0</span>px</label>
-              <input type="range" id="shadow" min="0" max="30" value="0">
+              <div class="setting_input_group">
+                <label><i class="fas fa-moon"></i> Sombra:</label>
+                <div class="input_wrapper">
+                  <input type="number" id="shadowInput" min="0" max="30" value="0">
+                  <span class="input_unit">px</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -76,49 +91,37 @@ export const render = () => `
             </div>
           </div>
 
-          <div class="optimization_settings">
-            <h4><i class="fas fa-download"></i> Exportación</h4>
-            
-            <div class="settings_grid">
-              <div class="setting_item">
-                <label><i class="fas fa-star"></i> Calidad:</label>
-                <select id="qualitySelect">
-                  <option value="high">Alta (18 CRF)</option>
-                  <option value="medium" selected>Media (23 CRF)</option>
-                  <option value="low">Baja (28 CRF)</option>
-                </select>
+          <div class="export_preview" id="exportPreview" style="display:none;">
+            <div class="preview_header">
+              <h4><i class="fas fa-eye"></i> <span id="previewTitle">Vista Previa</span></h4>
+            </div>
+            <div class="preview_info">
+              <div class="preview_row">
+                <span class="preview_label">Original:</span>
+                <span class="preview_value" id="previewOriginal">--</span>
               </div>
-
-              <div class="setting_item">
-                <label><i class="fas fa-file-video"></i> Formato:</label>
-                <select id="formatSelect">
-                  <option value="mp4" selected>MP4</option>
-                  <option value="mov">MOV</option>
-                  <option value="webm">WEBM</option>
-                </select>
+              <div class="preview_arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+              <div class="preview_row">
+                <span class="preview_label" id="previewLabel">Estimado:</span>
+                <span class="preview_value success" id="previewEstimated">--</span>
               </div>
             </div>
           </div>
 
-          <button class="btn_optimize" id="btnExport">
-            <i class="fas fa-download"></i>
-            <span>Exportar Video</span>
-          </button>
+          <div class="file_info_left" id="fileInfoLeft" style="display:none;">
+            <div class="file_info_header">
+              <i class="fas fa-file-video"></i>
+              <span>Nombre:</span>
+            </div>
+            <div class="file_name_display" id="fileNameDisplay" title="">video.mp4</div>
+          </div>
         </div>
       </div>
 
+      <!-- RIGHT COLUMN (70%) -->
       <div class="editar_right">
-        <div class="progress_section" id="progressSection" style="display:none;">
-          <div class="progress_header">
-            <h4><i class="fas fa-spinner fa-spin"></i> Exportando Video...</h4>
-            <span class="progress_percent" id="progressPercent">0%</span>
-          </div>
-          <div class="progress_bar">
-            <div class="progress_fill" id="progressFill"></div>
-          </div>
-          <p class="progress_message" id="progressMessage">Preparando exportación...</p>
-        </div>
-
         <div class="video_player_wrapper">
           <div class="no_video_placeholder" id="noVideoPlaceholder">
             <i class="fas fa-video"></i>
@@ -130,12 +133,40 @@ export const render = () => `
           </div>
         </div>
 
-        <div class="video_controls" id="videoControls" style="display:none;">
-          <button class="control_btn" id="btnRewind"><i class="fas fa-backward"></i></button>
-          <button class="control_btn play" id="btnPlayPause"><i class="fas fa-play"></i></button>
-          <button class="control_btn" id="btnForward"><i class="fas fa-forward"></i></button>
-          <button class="control_btn" id="btnVolume"><i class="fas fa-volume-up"></i></button>
-          <button class="control_btn" id="btnFullscreen"><i class="fas fa-expand"></i></button>
+        <div class="export_controls" id="exportControls" style="display:none;">
+          <div class="controls_row">
+            <div class="control_group">
+              <label id="labelQuality"><i class="fas fa-star"></i> Calidad:</label>
+              <select id="qualitySelect">
+                <option value="high">Alta (18 CRF)</option>
+                <option value="medium" selected>Media (23 CRF)</option>
+                <option value="low">Baja (28 CRF)</option>
+              </select>
+            </div>
+
+            <div class="control_group">
+              <label><i class="fas fa-file-video"></i> Formato:</label>
+              <select id="formatSelect">
+                <option value="mp4" selected>MP4</option>
+                <option value="mov">MOV</option>
+                <option value="webm">WEBM</option>
+                <option value="avi">AVI</option>
+                <option value="mkv">MKV</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn_export" id="btnExport">
+            <i class="fas fa-download"></i>
+            <span>Exportar Video</span>
+          </button>
+
+          <div class="progress_wrapper" id="progressWrapper" style="display:none;">
+            <div class="progress_bar_inline">
+              <div class="progress_fill_inline" id="progressFillInline"></div>
+            </div>
+            <span class="progress_text" id="progressText">0%</span>
+          </div>
         </div>
       </div>
     </section>
@@ -144,10 +175,52 @@ export const render = () => `
 
 export const init = () => {
   console.log(`✅ Editar de ${app} cargado`);
-  let currentVideo = null, videoElement = null, isExporting = false;
+  let currentVideo = null, videoElement = null, isExporting = false, videoMetadata = {};
+
+  // Tooltip para Calidad
+  $('#labelQuality').on('mouseenter', function() {
+    wiTip(this, 'Alta = 18 CRF (mejor calidad) | Media = 23 CRF | Baja = 28 CRF (menor tamaño)');
+  }).on('mouseleave', function() {
+    $('.wiTip').remove();
+  });
+
+  const estimateOutputSize = (originalSize, quality, format) => {
+    const qualityFactors = { high: 1.2, medium: 1, low: 0.7 };
+    const formatFactors = { mp4: 1, mov: 1.1, webm: 0.8, avi: 1.3, mkv: 1.05 };
+    
+    const qualityFactor = qualityFactors[quality] || 1;
+    const formatFactor = formatFactors[format] || 1;
+    
+    return originalSize * qualityFactor * formatFactor;
+  };
+
+  const updatePreview = () => {
+    if (!currentVideo) return;
+
+    const quality = $('#qualitySelect').val();
+    const format = $('#formatSelect').val();
+    const originalSize = currentVideo.size;
+    const estimatedSize = estimateOutputSize(originalSize, quality, format);
+
+    $('#previewOriginal').text(formatFileSize(originalSize));
+    $('#previewEstimated').text(formatFileSize(estimatedSize));
+    $('#previewLabel').text('Estimado:');
+    $('#previewTitle').text('Vista Previa');
+
+    if (estimatedSize > originalSize) {
+      $('#previewEstimated').removeClass('success').addClass('warning');
+    } else {
+      $('#previewEstimated').removeClass('warning').addClass('success');
+    }
+
+    $('#exportPreview').fadeIn();
+  };
 
   const handleVideoUpload = (file) => {
-    if (!file.type.startsWith('video/')) return Mensaje('Por favor selecciona un archivo de video válido', 'error');
+    if (!file.type.startsWith('video/')) {
+      Notificacion('Por favor selecciona un archivo de video válido', 'error', 3000);
+      return;
+    }
     
     currentVideo = file;
     const url = URL.createObjectURL(file);
@@ -157,15 +230,29 @@ export const init = () => {
     videoElement.src = url;
 
     videoElement.onloadedmetadata = () => {
+      videoMetadata = {
+        duration: videoElement.duration,
+        width: videoElement.videoWidth,
+        height: videoElement.videoHeight,
+        size: file.size,
+        format: file.name.split('.').pop().toUpperCase(),
+        name: file.name
+      };
+
       $('#noVideoPlaceholder').hide();
-      $('#videoPlayerContainer, #videoControls').show();
+      $('#videoPlayerContainer, #exportControls, #exportPreview, #fileInfoLeft').show();
+      
+      $('#fileNameDisplay').text(file.name).attr('title', file.name);
+      
       applyFilters();
-      Mensaje('¡Video cargado! Comienza a editar 🎬', 'success');
+      updatePreview();
+      
+      Notificacion(`✅ Video cargado: ${file.name} (${formatFileSize(file.size)})`, 'success', 3000);
     };
 
     videoElement.onerror = () => {
       if (currentVideo) {
-        Mensaje('Error al cargar el video. Intenta con otro archivo.', 'error');
+        Notificacion('Error al cargar el video. Intenta con otro archivo.', 'error', 3000);
         resetEditor();
       }
     };
@@ -174,10 +261,10 @@ export const init = () => {
   const applyFilters = () => {
     if (!videoElement) return;
     
-    const brightness = $('#brightness').val();
-    const contrast = $('#contrast').val();
-    const saturation = $('#saturation').val();
-    const shadow = $('#shadow').val();
+    const brightness = $('#brightnessInput').val();
+    const contrast = $('#contrastInput').val();
+    const saturation = $('#saturationInput').val();
+    const shadow = $('#shadowInput').val();
     
     let filterString = `brightness(${brightness}%) contrast(${contrast}%) saturate(${saturation}%)`;
     
@@ -198,36 +285,42 @@ export const init = () => {
       videoElement.style.filter = '';
     }
     
-    $('#videoPlayerContainer, #videoControls').hide();
+    $('#videoPlayerContainer, #exportControls, #exportPreview, #fileInfoLeft').hide();
     $('#noVideoPlaceholder').show();
     $('#videoInput').val('');
-    $('#progressSection').hide();
+    $('#progressWrapper').hide();
     
-    $('#brightness, #contrast, #saturation').val(100);
-    $('#brightnessValue, #contrastValue, #saturationValue').text('100');
-    $('#shadow').val(0);
-    $('#shadowValue').text('0');
+    $('#brightnessInput, #contrastInput, #saturationInput').val(100);
+    $('#shadowInput').val(0);
     $('#speed').val(1);
     $('#speedValue').text('1.0');
     
     currentVideo = null;
     videoElement = null;
+    videoMetadata = {};
   };
 
   const exportVideo = async () => {
-    if (!currentVideo) return Mensaje('No hay video para exportar', 'error');
-    if (isExporting) return Mensaje('Ya hay una exportación en progreso', 'warning');
+    if (!currentVideo) {
+      Notificacion('No hay video para exportar', 'error', 2000);
+      return;
+    }
 
-    isExporting = true;
-    wiSpin('#btnExport', true, 'Exportando...');
-    $('#progressSection').fadeIn();
-    updateProgress(0, 'Preparando exportación...');
+    if (isExporting) {
+      Notificacion('Ya hay una exportación en progreso', 'warning', 2000);
+      return;
+    }
 
     try {
-      const brightness = $('#brightness').val();
-      const contrast = $('#contrast').val();
-      const saturation = $('#saturation').val();
-      const shadow = $('#shadow').val();
+      isExporting = true;
+      $('#btnExport').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Exportando...');
+      $('#progressWrapper').fadeIn();
+      updateProgress(0);
+
+      const brightness = $('#brightnessInput').val();
+      const contrast = $('#contrastInput').val();
+      const saturation = $('#saturationInput').val();
+      const shadow = $('#shadowInput').val();
       const speed = $('#speed').val();
       const quality = $('#qualitySelect').val();
       const format = $('#formatSelect').val();
@@ -244,23 +337,37 @@ export const init = () => {
 
       console.log('🎬 Exportando video:', { brightness, contrast, saturation, shadow, speed, quality, format });
 
-      updateProgress(10, 'Subiendo video al servidor...');
+      updateProgress(10);
 
       const response = await fetch(`${API}/edit`, { method: 'POST', body: formData });
       if (!response.ok) throw new Error(`Error del servidor: ${response.statusText}`);
 
-      updateProgress(50, 'Aplicando filtros y efectos...');
+      updateProgress(50);
 
       const result = await response.json();
       if (!result.success) throw new Error(result.error || 'Error desconocido');
 
-      updateProgress(90, 'Descargando video editado...');
+      updateProgress(80);
 
       const downloadUrl = `${API}${result.downloadUrl}`;
       const downloadResponse = await fetch(downloadUrl);
       const blob = await downloadResponse.blob();
 
-      updateProgress(95, 'Finalizando...');
+      const originalSize = currentVideo.size;
+      const exportedSize = blob.size;
+
+      updateProgress(95);
+
+      // Update preview with REAL data
+      $('#previewTitle').text('Video Convertido');
+      $('#previewLabel').text('Convertido:');
+      $('#previewEstimated').text(formatFileSize(exportedSize));
+
+      if (exportedSize > originalSize) {
+        $('#previewEstimated').removeClass('success').addClass('warning');
+      } else {
+        $('#previewEstimated').removeClass('warning').addClass('success');
+      }
 
       const a = document.createElement('a');
       const url = URL.createObjectURL(blob);
@@ -269,61 +376,70 @@ export const init = () => {
       a.click();
       URL.revokeObjectURL(url);
 
-      updateProgress(100, '¡Completado!');
+      updateProgress(100);
 
       setTimeout(() => {
-        $('#progressSection').fadeOut();
-        Mensaje(`✅ Video exportado exitosamente en formato ${format.toUpperCase()}!`, 'success');
+        $('#progressWrapper').fadeOut();
+        $('#btnExport').prop('disabled', false).html('<i class="fas fa-download"></i> Exportar Video');
+        
+        const diff = ((exportedSize - originalSize) / originalSize * 100).toFixed(1);
+        if (exportedSize < originalSize) {
+          Notificacion(`✅ Video exportado exitosamente: ${Math.abs(diff)}% más pequeño (${formatFileSize(originalSize)} → ${formatFileSize(exportedSize)})`, 'success', 4000);
+        } else {
+          Notificacion(`✅ Video exportado en formato ${format.toUpperCase()}: ${formatFileSize(exportedSize)} (Original: ${formatFileSize(originalSize)})`, 'success', 4000);
+        }
       }, 1000);
 
     } catch (error) {
       console.error('❌ Error exportando:', error);
-      Mensaje(`Error al exportar: ${error.message}`, 'error');
-      $('#progressSection').fadeOut();
+      $('#progressWrapper').fadeOut();
+      $('#btnExport').prop('disabled', false).html('<i class="fas fa-download"></i> Exportar Video');
+      Notificacion(`Error al exportar: ${error.message}`, 'error', 4000);
     } finally {
       isExporting = false;
-      wiSpin('#btnExport', false);
     }
   };
 
-  const updateProgress = (percent, message) => {
-    $('#progressPercent').text(`${percent}%`);
-    $('#progressFill').css('width', `${percent}%`);
-    $('#progressMessage').text(message);
+  const updateProgress = (percent) => {
+    $('#progressFillInline').css('width', `${percent}%`);
+    $('#progressText').text(`${percent}%`);
   };
 
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes.toFixed(2)} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  };
+
+  // Event Listeners
   $('#uploadZone').on('dblclick', () => $('#videoInput').click())
     .on('dragover', (e) => { e.preventDefault(); $(e.currentTarget).addClass('dragover'); })
     .on('dragleave', (e) => $(e.currentTarget).removeClass('dragover'))
-    .on('drop', (e) => { e.preventDefault(); $(e.currentTarget).removeClass('dragover'); const files = e.originalEvent.dataTransfer.files; if (files.length) handleVideoUpload(files[0]); });
+    .on('drop', (e) => {
+      e.preventDefault();
+      $(e.currentTarget).removeClass('dragover');
+      const files = e.originalEvent.dataTransfer.files;
+      if (files.length) handleVideoUpload(files[0]);
+    });
 
-  $('#videoInput').on('change', (e) => { const file = e.target.files[0]; if (file) handleVideoUpload(file); });
-  
+  $('#videoInput').on('change', (e) => {
+    const file = e.target.files[0];
+    if (file) handleVideoUpload(file);
+  });
+
   $(document).on('click', '#btnSelect', () => !isExporting && $('#videoInput').click());
+  
   $(document).on('click', '#btnDelete', () => {
-    if (isExporting) return Mensaje('No puedes eliminar mientras se exporta', 'warning');
-    if (confirm('¿Estás seguro de eliminar este video?')) { resetEditor(); Mensaje('Video eliminado', 'success'); }
+    if (isExporting) return Notificacion('No puedes eliminar mientras se exporta', 'warning', 2000);
+    if (confirm('¿Estás seguro de eliminar este video?')) {
+      resetEditor();
+      Notificacion('Video eliminado', 'success', 2000);
+    }
   });
 
-  $(document).on('input', '#brightness', function() {
-    $('#brightnessValue').text($(this).val());
-    applyFilters();
-  });
-
-  $(document).on('input', '#contrast', function() {
-    $('#contrastValue').text($(this).val());
-    applyFilters();
-  });
-
-  $(document).on('input', '#saturation', function() {
-    $('#saturationValue').text($(this).val());
-    applyFilters();
-  });
-
-  $(document).on('input', '#shadow', function() {
-    $('#shadowValue').text($(this).val());
-    applyFilters();
-  });
+  $(document).on('input', '#brightnessInput, #contrastInput, #saturationInput, #shadowInput', applyFilters);
 
   $(document).on('input', '#speed', function() {
     const val = $(this).val();
@@ -338,34 +454,17 @@ export const init = () => {
     if (videoElement) videoElement.playbackRate = parseFloat(speed);
   });
 
+  $(document).on('change', '#qualitySelect, #formatSelect', () => {
+    if (currentVideo) updatePreview();
+  });
+
   $(document).on('click', '#btnExport', exportVideo);
-
-  $(document).on('click', '#btnPlayPause', function() {
-    if (!videoElement) return;
-    if (videoElement.paused) { videoElement.play(); $(this).html('<i class="fas fa-pause"></i>'); }
-    else { videoElement.pause(); $(this).html('<i class="fas fa-play"></i>'); }
-  });
-
-  $(document).on('click', '#btnRewind', () => { if (videoElement) videoElement.currentTime = Math.max(0, videoElement.currentTime - 10); });
-  $(document).on('click', '#btnForward', () => { if (videoElement) videoElement.currentTime = Math.min(videoElement.duration, videoElement.currentTime + 10); });
-  
-  $(document).on('click', '#btnVolume', function() {
-    if (!videoElement) return;
-    videoElement.muted = !videoElement.muted;
-    $(this).html(`<i class="fas fa-volume-${videoElement.muted ? 'mute' : 'up'}"></i>`);
-  });
-
-  $(document).on('click', '#btnFullscreen', () => {
-    if (videoElement) {
-      if (videoElement.requestFullscreen) videoElement.requestFullscreen();
-      else if (videoElement.webkitRequestFullscreen) videoElement.webkitRequestFullscreen();
-    }
-  });
 };
 
 export const cleanup = () => {
   console.log('🧹 Editar limpiado');
-  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnExport, .speed_btn, #btnPlayPause, #btnRewind, #btnForward, #btnVolume, #btnFullscreen').off();
+  $('#uploadZone, #videoInput, #btnSelect, #btnDelete, #btnExport, .speed_btn, #labelQuality, #qualitySelect, #formatSelect').off();
+  $('.wiTip').remove();
   const video = $('#editarVideo')[0];
   if (video?.src) URL.revokeObjectURL(video.src);
 };

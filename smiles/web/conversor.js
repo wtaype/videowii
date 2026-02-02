@@ -40,26 +40,32 @@ export const render = () => `
 
           <div class="video_stats_grid" id="videoStatsGrid" style="display:none;">
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-clock"></i></div>
               <div class="stat_card_label">Duración:</div>
               <div class="stat_card_value" id="videoDuration">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-desktop"></i></div>
               <div class="stat_card_label">Resolución:</div>
               <div class="stat_card_value" id="videoResolution">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-hdd"></i></div>
               <div class="stat_card_label">Tamaño:</div>
               <div class="stat_card_value" id="videoSize">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-file-video"></i></div>
               <div class="stat_card_label">Formato:</div>
               <div class="stat_card_value" id="videoFormat">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-tachometer-alt"></i></div>
               <div class="stat_card_label">Bitrate:</div>
               <div class="stat_card_value" id="videoBitrate">--</div>
             </div>
             <div class="stat_card">
+              <div class="stat_card_icon"><i class="fas fa-star"></i></div>
               <div class="stat_card_label">Calidad:</div>
               <div class="stat_card_value" id="videoQuality">--</div>
             </div>
@@ -67,7 +73,7 @@ export const render = () => `
 
           <div class="conversion_preview" id="conversionPreview" style="display:none;">
             <div class="preview_header">
-              <h4><i class="fas fa-eye"></i> Estimación</h4>
+              <h4><i class="fas fa-eye"></i> <span id="previewTitle">Vista Previa</span></h4>
             </div>
             <div class="preview_comparison">
               <div class="preview_cell">
@@ -78,17 +84,13 @@ export const render = () => `
                 <i class="fas fa-arrow-right"></i>
               </div>
               <div class="preview_cell">
-                <span class="preview_label">Estimado:</span>
+                <span class="preview_label" id="previewLabel">Estimado:</span>
                 <span class="preview_value success" id="previewEstimated">--</span>
               </div>
               <div class="preview_reduction">
                 <i class="fas fa-chart-pie"></i>
                 <span id="previewReduction">0%</span>
               </div>
-            </div>
-            <div class="preview_time">
-              <i class="fas fa-hourglass-half"></i>
-              <span id="estimatedTime">Tiempo estimado: --</span>
             </div>
           </div>
         </div>
@@ -166,7 +168,7 @@ export const render = () => `
 export const init = () => {
   console.log(`✅ Conversor de ${app} cargado`);
 
-  let currentVideo = null, videoMetadata = {}, videoAnalysis = null, selectedFormat = '', selectedQuality = 'medium', selectedResolution = 'original';
+  let currentVideo = null, videoMetadata = {}, videoAnalysis = null, selectedFormat = '', selectedQuality = 'medium', selectedResolution = 'original', isConverting = false;
 
   const formatCompatibility = {
     mp4: { codecs: ['h264', 'h265', 'mpeg4'], compression: 0.9, speed: 'rápida' },
@@ -216,28 +218,19 @@ export const init = () => {
     return analysis.size * baseFactor;
   };
 
-  const estimateConversionTime = (fileSize, format) => {
-    const speedFactors = { rápida: 1, media: 1.5, lenta: 2.5 };
-    const formatData = formatCompatibility[format];
-    const baseTime = (fileSize / (1024 * 1024)) * 2;
-    return baseTime * speedFactors[formatData.speed];
-  };
-
   const updateConversionPreview = () => {
     if (!videoAnalysis || !selectedFormat) return;
 
     const estimatedSize = estimateOutputSize(videoAnalysis, selectedFormat, selectedQuality, selectedResolution);
     const reduction = ((1 - estimatedSize / videoAnalysis.size) * 100).toFixed(1);
-    const estimatedTime = estimateConversionTime(videoAnalysis.size, selectedFormat);
 
     $('#previewOriginal').text(formatFileSize(videoAnalysis.size));
     $('#previewEstimated').text(formatFileSize(estimatedSize));
     $('#previewReduction').text(`${reduction > 0 ? '-' : '+'}${Math.abs(reduction)}%`);
-    
-    const minutes = Math.floor(estimatedTime / 60);
-    const seconds = Math.floor(estimatedTime % 60);
-    $('#estimatedTime').text(`Tiempo estimado: ${minutes > 0 ? minutes + ' min ' : ''}${seconds} seg`);
+    $('#previewLabel').text('Estimado:');
+    $('#previewTitle').text('Vista Previa');
 
+    // Update visual styling based on reduction (MANTENER NOTIFICACIONES)
     if (estimatedSize >= videoAnalysis.size * 0.98) {
       $('#previewEstimated').removeClass('success').addClass('warning');
       $('#previewReduction').closest('.preview_reduction').css('background', 'var(--warning)');
@@ -288,10 +281,10 @@ export const init = () => {
       $('#noVideoPlaceholder').hide();
       $('#videoPlayerContainer, #conversionControls, #conversionPreview, #videoStatsGrid, #fileInfoLeft').show();
       
-      // Update FULL file name in LEFT (with tooltip)
+      // Update file name in LEFT
       $('#fileNameDisplay').text(file.name).attr('title', file.name);
 
-      // Update stats in LEFT
+      // Update stats in LEFT with icons
       $('#videoDuration').text(formatDuration(video.duration));
       $('#videoResolution').text(`${video.videoWidth}x${video.videoHeight}`);
       $('#videoSize').text(formatFileSize(file.size));
@@ -309,7 +302,7 @@ export const init = () => {
 
       updateConversionPreview();
 
-      Notificacion(`✅ Video analizado: ${videoAnalysis.codec} | ${Math.round(videoAnalysis.bitrateMbps * 10) / 10} Mbps | Calidad ${videoAnalysis.quality}`, 'success', 3000);
+      Notificacion(`✅ Video analizado: ${videoAnalysis.codec} | ${videoAnalysis.bitrateMbps.toFixed(2)} Mbps | Calidad ${videoAnalysis.quality}`, 'success', 3000);
     };
 
     video.onerror = () => {
@@ -352,6 +345,7 @@ export const init = () => {
     selectedFormat = '';
     selectedQuality = 'medium';
     selectedResolution = 'original';
+    isConverting = false;
   };
 
   const convertVideo = async () => {
@@ -360,7 +354,13 @@ export const init = () => {
       return;
     }
 
+    if (isConverting) {
+      Notificacion('Ya hay una conversión en progreso', 'warning', 2000);
+      return;
+    }
+
     try {
+      isConverting = true;
       $('#btnConvert').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Convirtiendo...');
       $('#progressWrapper').fadeIn();
       updateProgress(0);
@@ -397,6 +397,20 @@ export const init = () => {
 
       updateProgress(95);
 
+      // Update preview with REAL data + Change title
+      $('#previewTitle').text('Video Convertido');
+      $('#previewLabel').text('Convertido:');
+      $('#previewEstimated').text(formatFileSize(convertedSize));
+      $('#previewReduction').text(`${reduction > 0 ? '-' : '+'}${Math.abs(reduction)}%`);
+
+      if (convertedSize > originalSize) {
+        $('#previewEstimated').removeClass('success').addClass('warning');
+        $('#previewReduction').closest('.preview_reduction').css('background', 'var(--warning)');
+      } else {
+        $('#previewEstimated').removeClass('warning').addClass('success');
+        $('#previewReduction').closest('.preview_reduction').css('background', 'var(--success)');
+      }
+
       const a = document.createElement('a');
       const url = URL.createObjectURL(blob);
       a.href = url;
@@ -411,9 +425,9 @@ export const init = () => {
         $('#btnConvert').prop('disabled', false).html('<i class="fas fa-sync-alt"></i> Convertir Video');
         
         if (convertedSize < originalSize) {
-          Notificacion(`✅ Convertido a ${selectedFormat.toUpperCase()}: ${reduction}% de reducción (${formatFileSize(originalSize)} → ${formatFileSize(convertedSize)})`, 'success', 4000);
+          Notificacion(`✅ Convertido a ${selectedFormat.toUpperCase()}: ${Math.abs(reduction)}% de reducción (${formatFileSize(originalSize)} → ${formatFileSize(convertedSize)})`, 'success', 4000);
         } else {
-          Notificacion(`✅ Video convertido a ${selectedFormat.toUpperCase()} (${formatFileSize(convertedSize)})`, 'success', 3000);
+          Notificacion(`✅ Video convertido a ${selectedFormat.toUpperCase()}: ${formatFileSize(convertedSize)} (Original: ${formatFileSize(originalSize)})`, 'success', 3000);
         }
       }, 1000);
 
@@ -422,6 +436,8 @@ export const init = () => {
       $('#progressWrapper').fadeOut();
       $('#btnConvert').prop('disabled', false).html('<i class="fas fa-sync-alt"></i> Convertir Video');
       Notificacion(`Error al convertir: ${error.message}`, 'error', 4000);
+    } finally {
+      isConverting = false;
     }
   };
 
@@ -430,10 +446,12 @@ export const init = () => {
     $('#progressText').text(`${percent}%`);
   };
 
-  const formatFileSize = (b) => {
-    if (b < 1024) return b + ' B';
-    if (b < 1024 * 1024) return (b / 1024).toFixed(2) + ' KB';
-    return (b / (1024 * 1024)).toFixed(2) + ' MB';
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 B';
+    if (bytes < 1024) return `${bytes.toFixed(2)} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(2)} KB`;
+    if (bytes < 1024 * 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
   };
 
   // Event Listeners
@@ -452,9 +470,10 @@ export const init = () => {
     if (file) handleVideoUpload(file);
   });
 
-  $(document).on('click', '#btnSelect', () => $('#videoInput').click());
+  $(document).on('click', '#btnSelect', () => !isConverting && $('#videoInput').click());
   
   $(document).on('click', '#btnDelete', () => {
+    if (isConverting) return Notificacion('No puedes eliminar mientras se convierte', 'warning', 2000);
     if (confirm('¿Estás seguro de eliminar este video?')) {
       resetConverter();
       Notificacion('Video eliminado', 'success', 2000);

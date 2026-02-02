@@ -53,10 +53,48 @@ export const render = () => `
             <button class="orientation_btn" data-orientation="horizontal"><i class="fas fa-desktop"></i><span>Horizontal (16:9)</span></button>
           </div>
           <div class="info_stats">
-            ${['clock|Duración|videoDuration', 'expand|Resolución|videoResolution', 'file|Tamaño|videoSize', 'film|Formato|videoFormat', 'tachometer-alt|FPS|videoFps', 'compress|Bitrate|videoBitrate'].map(s => {
-              const [icon, label, id] = s.split('|');
-              return `<div class="stat_item"><div class="stat_icon"><i class="fas fa-${icon}"></i></div><div class="stat_content"><span class="stat_label">${label}:</span><span class="stat_value" id="${id}">${id === 'videoFps' ? '30' : '--'}</span></div></div>`;
-            }).join('')}
+            <div class="stat_item">
+              <div class="stat_icon"><i class="fas fa-clock"></i></div>
+              <div class="stat_content">
+                <span class="stat_label">Duración:</span>
+                <span class="stat_value" id="videoDuration">--</span>
+              </div>
+            </div>
+            <div class="stat_item">
+              <div class="stat_icon"><i class="fas fa-expand"></i></div>
+              <div class="stat_content">
+                <span class="stat_label">Resolución:</span>
+                <span class="stat_value" id="videoResolution">--</span>
+              </div>
+            </div>
+            <div class="stat_item">
+              <div class="stat_icon"><i class="fas fa-file"></i></div>
+              <div class="stat_content">
+                <span class="stat_label">Tamaño:</span>
+                <span class="stat_value" id="videoSize">--</span>
+              </div>
+            </div>
+            <div class="stat_item">
+              <div class="stat_icon"><i class="fas fa-film"></i></div>
+              <div class="stat_content">
+                <span class="stat_label">Formato:</span>
+                <span class="stat_value" id="videoFormat">--</span>
+              </div>
+            </div>
+            <div class="stat_item">
+              <div class="stat_icon"><i class="fas fa-tachometer-alt"></i></div>
+              <div class="stat_content">
+                <span class="stat_label">FPS:</span>
+                <span class="stat_value" id="videoFps">30</span>
+              </div>
+            </div>
+            <div class="stat_item">
+              <div class="stat_icon"><i class="fas fa-compress"></i></div>
+              <div class="stat_content">
+                <span class="stat_label">Bitrate:</span>
+                <span class="stat_value" id="videoBitrate">--</span>
+              </div>
+            </div>
           </div>
           <div class="compatibility_section">
             <h4><i class="fas fa-check-circle"></i> Compatibilidad</h4>
@@ -87,8 +125,12 @@ export const init = () => {
     video.onloadedmetadata = () => {
       isLoadingVideo = false;
       videoMetadata = {
-        duration: video.duration, width: video.videoWidth, height: video.videoHeight,
-        size: file.size, format: file.type.split('/')[1].toUpperCase(), name: file.name
+        duration: video.duration, 
+        width: video.videoWidth, 
+        height: video.videoHeight,
+        size: file.size, 
+        format: file.type.split('/')[1].toUpperCase(), 
+        name: file.name
       };
 
       $('#noVideoPlaceholder').hide();
