@@ -104,7 +104,7 @@ export function wiTip(elm, txt, tipo = 'top', tiempo = 1800) {
 
 // SISTEMA IP V10.1
 export const wiIp = (geo) => {
-  return $.getJSON('https://ipinfo.io/json?token=3868948e170a74', data => {
+  return $.getJSON('https://ipinfo.io/json?token='+import.meta.env.VITE_IP_TOKEN, data => {
     const ua = navigator.userAgent;
     const [lat, lng] = (data.loc || '0,0').split(',').map(Number);
     const ipData = {
