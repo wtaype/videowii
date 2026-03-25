@@ -4,7 +4,7 @@ import { getls } from './widev.js';
 import { rutas } from './rutas/ruta.js';
 import './header.js';
 
-const pages = ['inicio','extraer','preview','optimizar','editar','online','conversor','acerca'];
+const pages = ['inicio','extraer','watermark','preview','optimizar','editar','online','conversor','acerca'];
 pages.forEach(pg => rutas.register(`/${pg}`, () => import(`./web/${pg}.js`))); // Publico general
 
 rutas.register('/smile',() => getls('wiSmile')?import('./smile/smile.js'):import('./smile/descubre.js'));//Con Auth
